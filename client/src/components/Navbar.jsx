@@ -2,8 +2,7 @@ import { Link } from "react-router";
 import { useState } from 'react';
 import Modal from './Modal.jsx';
 import Button from "./Button.jsx";
-import TextField from "./TextField.jsx";
-import Select from "./Select.jsx";
+import CreateTaskModal from './CreateTaskModal.jsx';
 
 export default function Navbar() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -26,7 +25,7 @@ export default function Navbar() {
               <Link to="/calendar" className="text-[var(--text-light)] hover:text-[var(--accent)] transition px-4 py-1">Upcoming</Link>
             </li>
             <li>
-              <Link to="/journals" className="text-[var(--text-light)] hover:text-[var(--accent)] transition px-4">Calendar</Link>
+              <Link to="/calendar" className="text-[var(--text-light)] hover:text-[var(--accent)] transition px-4">Calendar</Link>
             </li>
             <div className="mt-16 px-4 flex flex-row justify-between">
               <p className="font-semibold  text-[var(--accent)] hover:text-[var(--accent)] transition">Other Frames</p>
@@ -45,17 +44,7 @@ export default function Navbar() {
           </div>
         </div>
       </nav>
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} height="h-[50%]" width="w-[50%]">
-        <form>
-          <TextField>Task</TextField>
-          <Select
-            options={[ 
-              { label: 'Task', value: "task" },
-              { label: 'Quota', value: "quota"}
-            ]}
-          />
-        </form>
-      </Modal>
+      <CreateTaskModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}/>
     </>
     )
 }
