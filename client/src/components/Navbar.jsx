@@ -7,6 +7,12 @@ import CreateTaskModal from './CreateTaskModal.jsx';
 export default function Navbar() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const test = () => {
+    console.log("HELLO!");
+    setIsModalOpen(true);
+    console.log(isModalOpen);
+  }
+
   return (
     <>
       <nav className="h-full  w-64 bg-[var(--background)] flex flex-col space-y-4  ">
@@ -16,7 +22,7 @@ export default function Navbar() {
           <button><img src="/chevron-down.svg" className="w-4 h-4 invert" /></button>
         </div>
         <div className="mt-12 space-y-4"> 
-          <Button variant="secondary" size="md" onClick={() => setIsModalOpen(true)}>+ Add Task</Button>
+          <Button variant="secondary" size="md" onClick={test}>+ Add Task</Button>
           <ul className="flex flex-col space-y-4 ">
             <li>
               <Link to="/" className="text-[var(--text-light)] hover:text-[var(--accent)] transition px-4">Your Day Frame </Link>

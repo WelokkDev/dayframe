@@ -1,10 +1,16 @@
 // server/index.js
 const express = require('express');
+const cors = require('cors');
 const app = express();
 const PORT = 3000;
 
 const pool = require('./db'); // Import shared db connection
+const authRoutes = require('./routes/auth');
+
+app.use(cors());
 app.use(express.json());
+
+app.use('/', authRoutes);
 
 app.get("/", (req, res) => {
   res.send("API is working!");
@@ -25,5 +31,5 @@ app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
 
-const authRoutes = require('./routes/auth');
-app.use('/auth', authRoutes);
+
+
