@@ -24,3 +24,6 @@ app.get('/db-test', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
+
+const authRoutes = require('./routes/auth');
+app.use('/auth', authRoutes);
