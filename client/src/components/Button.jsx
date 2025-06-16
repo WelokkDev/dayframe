@@ -1,5 +1,8 @@
-export default function Button ({ children, onClick, type = "button", variant, size, className = ''}) {
+import { useState } from "react";
 
+export default function Button ({ children, onClick, type="button", variant, size, className=''}) {
+
+    
     const base = "rounded-lg inline-flex self-start"
 
     const variants = {
@@ -12,8 +15,9 @@ export default function Button ({ children, onClick, type = "button", variant, s
         xl: "px-4 py-2 text-xl"
     }
 
+
     return (
-        <button onClick={onClick} className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}>
+        <button onClick={onClick} type={type} className={`${base} ${variants[variant]} ${sizes[size]} ${className}`}>
             {children}
         </button>
     )

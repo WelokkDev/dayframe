@@ -5,7 +5,7 @@ import TextField from "./TextField";
 const Modal = ({ children, isOpen, onClose, height, width}) => {
   if (!isOpen) return null;
   
-  const base = "relative z-10 w-[90vw] max-w-2xl bg-[var(--foreground)] rounded-xl text-[var(--text-dark)] shadow-xl p-24"
+  const base = "relative z-10 w-[90vw] max-w-2xl bg-[var(--foreground)] rounded-xl text-[var(--text-dark)] shadow-xl p-16"
 
   return ReactDOM.createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center ">
