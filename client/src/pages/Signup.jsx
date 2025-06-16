@@ -63,7 +63,7 @@ export default function Signup() {
         </form>
         <p className="flex justify-center mt-2">Already have an account? 
           <a 
-            href="/signup" 
+            href="/login" 
             className="text-[#3F6C51] pl-1 hover:text-[#2F513D] cursor-pointer transition-colors duration-150"
           >
             Log in

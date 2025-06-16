@@ -8,7 +8,8 @@ export default function Button ({ children, onClick, type = "button", variant, s
     }
 
     const sizes = {
-        md: "px-4 "
+        md: "px-4 ",
+        xl: "px-4 py-2 text-xl"
     }
 
     return (

@@ -2,6 +2,7 @@ import Modal from './Modal.jsx';
 import Button from "./Button.jsx";
 import TextField from "./TextField.jsx";
 import Select from "./Select.jsx";
+import DatePicker from "./DatePicker.jsx"
 
 const CreateTaskModal = ( {isOpen, onClose } ) => {
   return (
@@ -17,6 +18,7 @@ const CreateTaskModal = ( {isOpen, onClose } ) => {
             />
           </div>
           <TextField>Optional Description</TextField>
+          <DatePicker />
         </form>
       </Modal>
   )

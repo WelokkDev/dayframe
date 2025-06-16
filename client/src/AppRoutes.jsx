@@ -7,6 +7,7 @@ import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
 import Journals from "./pages/Journals.jsx";
 import Settings from "./pages/Settings.jsx";
+import Welcome from "./pages/Welcome.jsx";
 import './App.css'
 
 
@@ -16,6 +17,7 @@ export default function AppRoutes() {
     
     return !isAuthenticated ? (
         <Routes>
+          <Route path="/welcome" element={<Welcome />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
         </Routes>
