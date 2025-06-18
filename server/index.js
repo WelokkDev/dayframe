@@ -6,11 +6,13 @@ const PORT = 3000;
 
 const pool = require('./db'); // Import shared db connection
 const authRoutes = require('./routes/auth');
+const taskRoutes = require('./routes/tasks');
 
 app.use(cors());
 app.use(express.json());
 
 app.use('/', authRoutes);
+app.use('/', taskRoutes);
 
 app.get("/", (req, res) => {
   res.send("API is working!");

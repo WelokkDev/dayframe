@@ -3,11 +3,13 @@ import { useState } from 'react';
 import Modal from './Modal.jsx';
 import Button from "./Button.jsx";
 import CreateTaskModal from './CreateTaskModal.jsx';
+import CreateFrameModal from './CreateFrameModal.jsx';
 import { useNavigate } from "react-router";
 import { useAuth } from "../context/AuthProvider.jsx";
 
 export default function Navbar() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+  const [isCreateFrameOpen, setIsCreateFrameOpen] = useState(false);
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
@@ -27,7 +29,7 @@ export default function Navbar() {
           <button><img src="/chevron-down.svg" className="w-4 h-4 invert" /></button>
         </div>
         <div className="mt-12 space-y-4"> 
-          <Button variant="primary" size="xl" className="w-full flex justify-center" onClick={() => {setIsModalOpen(true)}}>+ Add Task</Button>
+          <Button variant="primary" size="xl" className="w-full flex justify-center" onClick={() => {setIsCreateTaskOpen(true)}}>+ Add Task</Button>
           <ul className="flex flex-col space-y-4 text-xl">
             <li className="flex justify-center">
               <Link to="/" className=" text-[var(--text-light)] hover:text-[var(--accent)] transition px-4">Your Day Frame</Link>
@@ -40,7 +42,7 @@ export default function Navbar() {
             </li>
             <div className="mt-16 px-4 flex flex-row justify-between">
               <p className="font-semibold  text-[var(--accent)] hover:text-[var(--accent)] transition">Other Frames</p>
-              <Button variant="primary" size="md">+</Button>
+              <Button variant="primary" size="md" onClick={() => {setIsCreateFrameOpen(true)}}>+</Button>
             </div>
             <hr/>
             <li>
@@ -56,7 +58,8 @@ export default function Navbar() {
             <Button variant="primary" size="xl" onClick={() => handleLogout()} className="w-full flex justify-center">Log out</Button>
           </div>
       </nav>
-      <CreateTaskModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}/>
+      <CreateTaskModal isOpen={isCreateTaskOpen} onClose={() => setIsCreateTaskOpen(false)}/>
+      <CreateFrameModal isOpen={isCreateFrameOpen} onClose={() => setIsCreateFrameOpen(false)}/>
     </>
     )
 }

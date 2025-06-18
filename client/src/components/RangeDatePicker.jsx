@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addMonths, subMonths, eachDayOfInterval } from "date-fns";
 import MiniCalendar from "./MiniCalendar";
 
-const DatePicker = ({ children }) => {
+const DatePicker = ({ children, onDatesChange }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDates, setSelectedDates] = useState([]);
 
@@ -38,7 +38,16 @@ const DatePicker = ({ children }) => {
     };
   }, []);
 
-
+  useEffect(() => {
+    if (selectedDates.length === 0) {
+      onDatesChange(null, null)
+    } else {
+      const times = selectedDates.map(d => d.getTime());
+      const start = new Date(Math.min(...times));
+      const end = new Date(Math.max(...times));
+      onDatesChange(start, end);
+    }
+  }, [selectedDates])
 
   const activeClass = "bg-[#FFD97D] font-semibold text-[#664700] hover:bg-[#FFD061] active:bg-[#FFC94D]";
   const inactiveClass = "border border-gray-300 hover:border-[var(--accent)] hover:border-2";

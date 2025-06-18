@@ -1,14 +1,49 @@
 import React, { useState } from "react";
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addMonths, subMonths, eachDayOfInterval } from "date-fns";
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addMonths, subMonths, eachDayOfInterval, addDays } from "date-fns";
+import Button from "./Button.jsx";
 
-const MiniCalendar = () => {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(new Date());
+const MiniCalendar = ({ currentMonth, setCurrentMonth, selectedDates, setSelectedDates }) => {
 
+  
+  
   const days = eachDayOfInterval({
     start: startOfWeek(startOfMonth(currentMonth)),
     end: endOfWeek(endOfMonth(currentMonth)),
   });
+
+  const isSameDay = (d1, d2) => format(d1, "yyyy-MM-dd") === format(d2, "yyyy-MM-dd");
+
+  const handleDateClick = (date) => {
+    const exists = selectedDates.some(d => isSameDay(d, date));
+    
+    const dayAfter = addDays(date, 1);
+    const dayBefore = addDays(date, -1)
+
+    const isAdjacent = selectedDates.some(d => isSameDay(d, dayBefore) || isSameDay(d, dayAfter));
+
+    if (exists) {
+      if (selectedDates.length === 1) {
+        setSelectedDates(prev => prev.filter(d => !isSameDay(d, date)));
+      }
+      else {
+        const times = selectedDates.map(d => d.getTime());
+        const start = new Date(Math.min(...times));
+        const end = new Date(Math.max(...times));
+        if (isSameDay(date, start)) {
+          setSelectedDates(prev => prev.filter(d => !isSameDay(d, start)));
+        } else if (isSameDay(date, end)) {
+          setSelectedDates(prev => prev.filter(d => !isSameDay(d, end)));
+        }
+      }
+    }
+    else if (selectedDates.length === 0 || isAdjacent) {
+      setSelectedDates(prev => [...prev, date]);
+    }
+    else {
+      alert("Error!")
+    }
+
+  }
 
   return (
     <div className="w-full h-full ">
@@ -22,18 +57,25 @@ const MiniCalendar = () => {
           {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
             <div key={day} className="font-bold text-[var(--text-dark)]">{day}</div>
           ))}
-          {days.map((day) => (
-            <button
-              type="button"
-              key={day}
-              onClick={() => setSelectedDate(day)}
-              className={`p-2 rounded-full ${format(day, "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd") ? "bg-[var(--accent)] text-[var(--text-dark)]" : "hover:bg-gray-300"}`}
-            >
-              {format(day, "d")}
-            </button>
-          ))}
+          {days.map((day) => 
+          {
+            const isSelected = selectedDates.some(d => isSameDay(d, day));
+            
+
+            return (
+              <button
+                type="button"
+                key={day}
+                onClick={() => handleDateClick(day)}
+                className={`p-2 rounded-full ${isSelected ? "bg-[var(--accent)] text-[var(--text-dark)]" : "hover:bg-gray-300"}`}
+              >
+                {format(day, "d")}
+              </button>
+            )
+          })}
         </div>
       </div>
+      
     </div>
    
   );
