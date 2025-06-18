@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 
 const Toggle = ({ children, className="", value, onChange,
@@ -10,14 +10,15 @@ const Toggle = ({ children, className="", value, onChange,
     const base = "px-4 py-2 w-full flex justify-center rounded-lg inline-flex self-start  "
 
     const handleClick = (e) => {
-        const newValue = !value;
-        onChange(newValue);
+        if (value != null) {
+            onChange(null)
+        }
 
     }
 
     return (
         <button onClick={handleClick} type="button" className={`${base} ${className}
-        ${value ? activeClass : inactiveClass}`}>
+        ${value != null ? inactiveClass : activeClass}`}>
             {children}
         </button>
     )

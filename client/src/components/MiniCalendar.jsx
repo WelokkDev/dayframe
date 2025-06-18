@@ -39,10 +39,6 @@ const MiniCalendar = ({ currentMonth, setCurrentMonth, selectedDates, setSelecte
     else if (selectedDates.length === 0 || isAdjacent) {
       setSelectedDates(prev => [...prev, date]);
     }
-    else {
-      alert("Error!")
-    }
-
   }
 
   return (
@@ -60,6 +56,11 @@ const MiniCalendar = ({ currentMonth, setCurrentMonth, selectedDates, setSelecte
           {days.map((day) => 
           {
             const isSelected = selectedDates.some(d => isSameDay(d, day));
+            const dayAfter = addDays(day, 1);
+            const dayBefore = addDays(day, -1);
+            const isAdjacent = selectedDates.some(d => isSameDay(d, dayBefore) || isSameDay(d, dayAfter));
+
+            const isSelectable = selectedDates.length === 0 || isAdjacent || isSelected;
             
 
             return (
@@ -67,7 +68,10 @@ const MiniCalendar = ({ currentMonth, setCurrentMonth, selectedDates, setSelecte
                 type="button"
                 key={day}
                 onClick={() => handleDateClick(day)}
-                className={`p-2 rounded-full ${isSelected ? "bg-[var(--accent)] text-[var(--text-dark)]" : "hover:bg-gray-300"}`}
+                className={`p-2 rounded-full 
+                    ${isSelected ? "bg-[var(--accent)] text-[var(--text-dark)]" : ""}
+                    ${!isSelected && isSelectable ? "hover:bg-gray-300" : ""}
+                  `}
               >
                 {format(day, "d")}
               </button>

@@ -21,8 +21,8 @@ const CreateTaskModal = ( {isOpen, onClose } ) => {
   const [endDate, setEndDate] = useState(null);
   const [repeat, setRepeat] = useState({
     repeat_is_true: false,
-    repeat_interval: null,
-    repeat_unit: "",
+    repeat_interval: 1,
+    repeat_unit: "day",
     repeat_ends_on: null
   });
 
@@ -57,14 +57,12 @@ const CreateTaskModal = ( {isOpen, onClose } ) => {
 
                   }
                 </DatePicker>
-                <RepeatForm />
+                <RepeatForm repeat={repeat} setRepeat={setRepeat} />
               </div>
               <Select placeholder="test" options={[
-                {label: "Dayframe", value: "dayframe"},
-                {label: "Journal Frame", value: "journal"}
+                {label: "General", value: "dayframe"},
+                {label: "Academic", value: "journal"}
               ]}/>
-              
-              
 
             </>
           ) : (
