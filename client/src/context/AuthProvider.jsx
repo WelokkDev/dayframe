@@ -1,57 +1,99 @@
 import { useContext, createContext, useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router";
 
 const AuthContext = createContext();
 
 const AuthProvider = ({ children }) => {
 
     const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+    
+    const navigate = useNavigate();
+    const location = useLocation();
 
-    const [token, setToken] = useState(() => {
-        return localStorage.getItem("token") || null;
-    }); 
-
+    // Check login status when app loads
     useEffect(() => {
-        try{
-            const storedUser = localStorage.getItem("user");
-            const storedToken = localStorage.getItem("token");
-
-            if (storedUser && storedUser !== "undefined") {
-            setUser(JSON.parse(storedUser));
-            }
-
-            if (storedToken) {
-            setToken(storedToken);
-        }
-        } catch (err) {
-            console.error("Failed to parse user from localStorage", err);
-            localStorage.removeItem("user");
-            localStorage.removeItem("token");
-        }
+        const fetchUser = async () => {
+            try {
+                const res = await fetch("http://localhost:3000/me", {
+                    credentials: "include"
+                });
+                if (res.ok) {
+                    const data= await res.json();
+                    setUser(data.user);
+                } else if (res.status === 401) {
+                    // Try refreshing token if unauthorized
+                    await tryRefresh();
+                } else {
+                    setUser(null);
+                }
+            } catch (err) {
+                console.error("Auth check failed:", err);
+                setUser(null);
+            } finally {
+                setLoading(false);
+            }};
+            fetchUser();
     }, []);
+    
+    const tryRefresh = async () => {
+        console.log("REFRESH HAS BEEN TREID")
+        try {
+            const res = await fetch("http://localhost:3000/refresh", { method: "POST", credentials: "include" });
+            
+            if (res.ok) {
+                const userRes = await fetch("http://localhost:3000/me", { credentials: "include" });
 
-    const login = ({user, token}) => {
+                if (userRes.ok) {
+                    const data = await userRes.json();
+                    setUser(data.user);
+                } else {
+                    setUser(null);
+                }
+            } else {
+                setUser(null);
+            }
+        } catch (err) {
+            console.error("Refresh failed:", err);
+            setUser(null);
+        }
+    }
+
+    const login = (user) => {
         setUser(user);
-        setToken(token);
-        localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('token', token);
+        navigate("/")
     };
 
-    const logout = () => {
+    const logout = async () => {
+        try {
+            await fetch("http://localhost:3000/logout", {
+                method: "POST",
+                credentials: "include",
+            });
+        } catch (err) {
+        console.error("Logout request failed:", err);
+        }
         setUser(null);
-        setToken(null);
-        localStorage.removeItem("user");
-        localStorage.removeItem("token");
+        navigate("/welcome");
     };
+
+    // Redirect unauthenticated users away from protected routes
+    useEffect(() => {
+        const publicRoutes = ["/login", "/signup", "/welcome"];
+        if (!loading && !user && !publicRoutes.includes(location.pathname)) {
+        navigate("/welcome");
+        }
+    }, [loading, user, location.pathname]);
 
     const value = {
         user,
-        token,
         login, 
         logout, 
-        isAuthenticated: !!token,
+        isAuthenticated: !!user,
+        loading
     };
 
-    return <AuthContext.Provider value={value} >{children}</AuthContext.Provider>;
+    return <AuthContext.Provider value={value} >{ !loading && children}</AuthContext.Provider>;
 };
 
 export default AuthProvider;

@@ -1,18 +1,29 @@
 // server/index.js
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const app = express();
 const PORT = 3000;
 
 const pool = require('./db'); // Import shared db connection
 const authRoutes = require('./routes/auth');
+const categoryRoutes = require('./routes/categories');
 const taskRoutes = require('./routes/tasks');
 
-app.use(cors());
+
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'X-CSRF-TOKEN']
+}));
+app.use(cookieParser());
 app.use(express.json());
 
 app.use('/', authRoutes);
-app.use('/', taskRoutes);
+app.use('/categories', categoryRoutes);
+app.use('/tasks', taskRoutes);
+
 
 app.get("/", (req, res) => {
   res.send("API is working!");

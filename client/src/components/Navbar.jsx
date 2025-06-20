@@ -16,7 +16,7 @@ export default function Navbar() {
   const handleLogout = () => {
     console.log("TESTTT")
     logout();
-    navigate("/welcome")
+    
     
   }
 

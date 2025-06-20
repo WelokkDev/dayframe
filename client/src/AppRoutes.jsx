@@ -12,26 +12,22 @@ import './App.css'
 
 
 export default function AppRoutes() {
+    return  (
+    <Routes>
+      <Route path="/welcome" element={<Welcome />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
 
-    const { isAuthenticated } = useAuth();
-    
-    return !isAuthenticated ? (
-        <Routes>
-          <Route path="/welcome" element={<Welcome />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-        </Routes>
+      <Route element={<Layout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/calendar" element={<Calendar />} />
+        <Route path="/journals" element={<Journals />} />
+        <Route path="/settings" element={<Settings />} />
+      </Route>
 
-      ) : (
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/calendar" element={<Calendar />} />
-          <Route path="/journals" element={<Journals />} />
-          <Route path="/settings" element={<Settings />} />
-        </Routes>
-      </Layout>
-      
-    )
+      {/* Fallback for any unknown route */}
+      <Route path="*" element={<Welcome />} />
+    </Routes> 
+  )
 }
   

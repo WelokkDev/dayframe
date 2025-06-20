@@ -56,9 +56,9 @@ export default function Signup() {
         <h1 className="text-2xl font-bold ">Sign up</h1>
         <p className="mt-2 text-[var(--text-dark)] mb-2 ">Here’s what’s on your agenda today...</p>
         <form onSubmit={handleSignup}>
-          <TextField name="display_name" onChange={handleInput} className="mt-4">Name</TextField>
-          <TextField type="email" name="email" onChange={handleInput} className="mt-4">Email</TextField>
-          <TextField type="password" name="password" onChange={handleInput} className="mt-4">Password</TextField>
+          <TextField name="display_name" onChange={handleInput} className="mt-4 w-full">Name</TextField>
+          <TextField type="email" name="email" onChange={handleInput} className="mt-4 w-full">Email</TextField>
+          <TextField type="password" name="password" onChange={handleInput} className="mt-4 w-full">Password</TextField>
           <Button variant="primary" size="md" type="submit" className="w-full py-3 mt-4 justify-center items-center text-center">Create account</Button>
         </form>
         <p className="flex justify-center mt-2">Already have an account? 

@@ -26,14 +26,14 @@ export default function Login() {
           headers: {
             "Content-Type": "application/json",
           },
+          credentials: "include",
           body: JSON.stringify(input),
         });
 
         const data = await res.json();
 
         if (res.ok) {
-          login(data);
-          navigate("/")
+          login(data.user);
         }
         else {
           alert(data.error || "Login failed.")
@@ -62,8 +62,8 @@ export default function Login() {
         <h1 className="text-2xl font-bold ">Log in</h1>
         <p className="mt-2 text-[var(--text-dark)]">Here’s what’s on your agenda today...</p>
         <form onSubmit={handleLogin}>
-          <TextField name="email" onChange={handleInput} className="mt-4">Email</TextField>
-          <TextField name="password" onChange={handleInput} className="mt-4">Password</TextField>
+          <TextField name="email" onChange={handleInput} className="mt-4 w-full">Email</TextField>
+          <TextField name="password" onChange={handleInput} className="mt-4 w-full">Password</TextField>
           <Button variant="primary" size="md" type="submit" className="w-full py-3 mt-4 justify-center items-center text-center">Log in</Button>
         </form>
         <p className="flex justify-center mt-2">Don't have an account? 

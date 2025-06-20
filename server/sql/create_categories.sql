@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS categories (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  icon TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  archived BOOLEAN DEFAULT FALSE
+);
