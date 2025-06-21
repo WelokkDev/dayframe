@@ -4,6 +4,7 @@ import Modal from './Modal.jsx';
 import Button from "./Button.jsx";
 import CreateTaskModal from './CreateTaskModal.jsx';
 import CreateFrameModal from './CreateFrameModal.jsx';
+import CategoryList from "./CategoryList.jsx";
 import { useNavigate } from "react-router";
 import { useAuth } from "../context/AuthProvider.jsx";
 
@@ -45,12 +46,7 @@ export default function Navbar() {
               <Button variant="primary" size="md" onClick={() => {setIsCreateFrameOpen(true)}}>+</Button>
             </div>
             <hr/>
-            <li>
-              <Link to="/journals" className="text-[var(--text-light)] hover:text-[var(--accent)] transition px-4">Life</Link>
-            </li>
-            <li>
-              <Link to="/journals" className="text-[var(--text-light)] hover:text-[var(--accent)] transition px-4">Academics</Link>
-            </li>
+            <CategoryList />
           </ul>
 
         </div>
