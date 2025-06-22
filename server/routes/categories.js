@@ -5,7 +5,7 @@ const authenticateToken = require('../middleware/authMiddleware');
 
 router.post('/', authenticateToken, async (req, res) => {
     console.log("Token user:", req.user);
-        console.log("Request body:", req.body);
+    console.log("Request body:", req.body);
     
     const userId = req.user.userId;
     const { name } = req.body;

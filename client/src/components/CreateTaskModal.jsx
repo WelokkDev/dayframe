@@ -11,12 +11,13 @@ import { useState } from "react";
 import { useAuth } from "../context/AuthProvider.jsx";
 
 
-const CreateTaskModal = ( {isOpen, onClose } ) => {
+const CreateTaskModal = ( {categories, isOpen, onClose } ) => {
   const { user } = useAuth();
   const [step, setStep] = useState(0);
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [category, setCategory] = useState(1)
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [repeat, setRepeat] = useState({
@@ -30,6 +31,7 @@ const CreateTaskModal = ( {isOpen, onClose } ) => {
     console.log("ALRIGHTY")
     console.log(startDate);
     console.log(endDate);
+    console.log(category)
   }
 
   return (
@@ -59,10 +61,10 @@ const CreateTaskModal = ( {isOpen, onClose } ) => {
                 </DatePicker>
                 <RepeatForm repeat={repeat} setRepeat={setRepeat} />
               </div>
-              <Select placeholder="test" options={[
-                {label: "General", value: "dayframe"},
-                {label: "Academic", value: "journal"}
-              ]}/>
+
+              <Select value={category} onChange={(e) => setCategory(e.target.value)} options={categories.map((category) => (
+                {label: category.name, value: category.id}
+              ))}/>
 
             </>
           ) : (

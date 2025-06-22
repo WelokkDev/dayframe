@@ -5,9 +5,10 @@ import Home from "./pages/Home.jsx";
 import Calendar from "./pages/Calendar.jsx";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
-import Journals from "./pages/Journals.jsx";
+import TasksByCategory from "./pages/TasksByCategory.jsx"
 import Settings from "./pages/Settings.jsx";
 import Welcome from "./pages/Welcome.jsx";
+import Board from "./pages/Board.jsx";
 import './App.css'
 
 
@@ -20,13 +21,13 @@ export default function AppRoutes() {
 
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
+        <Route path="/board" element={<Board />} />
         <Route path="/calendar" element={<Calendar />} />
-        <Route path="/journals" element={<Journals />} />
-        <Route path="/settings" element={<Settings />} />
+        <Route path="/frame/:categoryId" element={<TasksByCategory />} />
       </Route>
 
       {/* Fallback for any unknown route */}
-      <Route path="*" element={<Welcome />} />
+      <Route path="*" element={<Home />} />
     </Routes> 
   )
 }
