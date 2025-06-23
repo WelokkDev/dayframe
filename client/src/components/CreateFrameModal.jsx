@@ -36,11 +36,11 @@ const CreateCategoryModal = ( {isOpen, onClose } ) => {
           onClose();
         }
         else {
-          alert(data.error || "Login failed.")
+          alert(data.error || "Creating category failed.")
         }
 
       } catch (err) {
-        console.error("Login error:", err);
+        console.error("Creating category error:", err);
         alert("Server error. Try again later.");
 
       } finally {

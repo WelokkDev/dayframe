@@ -17,7 +17,5 @@ CREATE TABLE IF NOT EXISTS tasks (
     -- Tracking task outcome
     completed_at TIMESTAMP,
     cancelled BOOLEAN DEFAULT FALSE,
-    failure_reason TEXT,
-
-    parent_task_id INTEGER REFERENCES tasks(id) -- for duplicates / instances
+    failure_reason TEXT
 );
