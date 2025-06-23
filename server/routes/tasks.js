@@ -40,4 +40,29 @@ router.post("/", authenticateToken, async (req, res) => {
     }
 });
 
+router.get("/", authenticateToken, async (req, res) => {
+    const userId = req.user.userId;
+    const categoryId = req.query.categoryId;
+    
+    try {
+        let result;
+        if (categoryId) {
+            result = await pool.query(
+                `SELECT * FROM tasks WHERE user_id = $1 AND category_id = $2 ORDER BY created_at DESC`,
+                [userId, categoryId]
+            );
+        } else {
+            result = await pool.query(
+                `SELECT * FROM tasks where user_id = $1 ORDER BY created_at DESC`,
+                [userId]
+            )
+        }
+        res.json(result.rows)
+
+    } catch (err) {
+        console.log("Error fetching tasks:", err.message);
+        res.status(500).json({ error: "Failed to fetch tasks" })
+    }
+})
+
 module.exports = router;

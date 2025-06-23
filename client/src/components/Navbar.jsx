@@ -51,9 +51,9 @@ export default function Navbar() {
       } finally {
         setLoading(false);
       }
-          }
+    }
   
-          fetchCategories();
+    fetchCategories();
   }, []);
   
 
