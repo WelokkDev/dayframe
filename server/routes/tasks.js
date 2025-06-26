@@ -43,25 +43,59 @@ router.post("/", authenticateToken, async (req, res) => {
 router.get("/", authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     const categoryId = req.query.categoryId;
+    const status = req.query.status;
     
     try {
-        let result;
+        let baseQuery = `SELECT * FROM tasks where user_id = $1`;
+        const queryParams = [userId];
+
         if (categoryId) {
-            result = await pool.query(
-                `SELECT * FROM tasks WHERE user_id = $1 AND category_id = $2 ORDER BY created_at DESC`,
-                [userId, categoryId]
-            );
-        } else {
-            result = await pool.query(
-                `SELECT * FROM tasks where user_id = $1 ORDER BY created_at DESC`,
-                [userId]
-            )
+            baseQuery += ` AND category_id = $2`;
+            queryParams.push(categoryId);
         }
-        res.json(result.rows)
+
+        if (status == "completed") {
+            baseQuery += ` AND completed_at IS NOT NULL AND cancelled = FALSE`;
+        } else if (status == "incomplete") {
+            baseQuery += ` AND completed_at IS NULL AND cancelled = FALSE`;
+        } else if (status == "failed") {
+            baseQuery += ` AND cancelled = TRUE`;
+        }
+        baseQuery += ` ORDER BY created_at DESC`;
+
+        const result = await pool.query(baseQuery, queryParams)
+        res.json(result.rows);
 
     } catch (err) {
         console.log("Error fetching tasks:", err.message);
         res.status(500).json({ error: "Failed to fetch tasks" })
+    }
+})
+
+router.patch("/:id", authenticateToken, async (req, res) => {
+    const userId = req.user.userId;
+    const taskId = req.params.id;
+    const { completed_at, cancelled, failure_reason } = req.body;
+
+    try {
+        const result = await pool.query(
+            `UPDATE tasks
+            SET completed_at = $1,
+                cancelled = $2,
+                failure_reason = $3
+            where id = $4 AND user_id = $5
+            RETURNING *`,
+            [completed_at, cancelled, failure_reason, taskId, userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+        res.json(result.rows[0]);
+
+    } catch (err) {
+        console.error("Error updating task:", err.message);
+        res.status(500).json({ error: "Failed to update task"});
     }
 })
 

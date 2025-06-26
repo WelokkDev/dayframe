@@ -23,7 +23,7 @@ router.post('/', authenticateToken, async (req, res) => {
         res.status(201).json(result.rows[0])
 
     } catch (err) {
-        console.log("Error creating category:", err.message);
+        console.error("Error creating category:", err.message);
         res.status(500).json({ error: 'Failed to create category' })
     }
 });
@@ -39,9 +39,32 @@ router.get("/", authenticateToken, async (req, res) => {
         res.json(result.rows);
 
     } catch (err) {
-        console.log("Error fetching categories:", err.message);
-        res.status(500).json({ error: "Failed to fetch categories" })
+        console.error("Error fetching categories:", err.message);
+        res.status(500).json({ error: "Failed to fetch categories" });
     }
 })
+
+// Fetch single category by ID
+router.get("/:id", authenticateToken, async (req, res) => {
+    const userId = req.user.userId;
+    const categoryId = req.params.id;
+
+    try {
+        const result = await pool.query(
+            `SELECT id, name FROM categories WHERE id = $1 and user_id = $2`,
+            [categoryId, userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "Category not found" });
+        }
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error("Error fetching category by ID:", err.message);
+        res.status(500).json({ error: "Failed to fetch category" });
+    }
+})
+
+
 
 module.exports = router;

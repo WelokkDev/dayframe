@@ -66,8 +66,8 @@ export default function Navbar() {
           <button><img src="/chevron-down.svg" className="w-4 h-4 invert" /></button>
         </div>
         <div className="mt-12 space-y-2"> 
-          <Button variant="secondary" size="xl" className="w-full" onClick={() => {setIsCreateTaskOpen(true)}}>+ Add Task</Button>
-          <ul className="flex flex-col space-y-2 text-xl">
+          <Button variant="secondary" size="md" className="w-full" onClick={() => {setIsCreateTaskOpen(true)}}>+ Add Task</Button>
+          <ul className="flex flex-col space-y-2 text-md">
             <li className="">
               <Link to="/" className={getLinkStyle("/")}>
                 Today
@@ -76,8 +76,12 @@ export default function Navbar() {
             <li>
               <Link to="/board" className={getLinkStyle("/board")}>Board</Link>
             </li>
+
             <li>
-              <Link to="/calendar" className={getLinkStyle("/calendar")}>Calendar</Link>
+              <Link to="/completed" className={getLinkStyle("/completed")}>Completed</Link>
+            </li>
+            <li>
+              <Link to="/failed" className={getLinkStyle("/failed")}>Failed</Link>
             </li>
             
             <div className="mt-16 px-4 mb-4 flex flex-row justify-between">

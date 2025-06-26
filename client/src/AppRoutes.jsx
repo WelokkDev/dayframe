@@ -9,6 +9,8 @@ import TasksByCategory from "./pages/TasksByCategory.jsx"
 import Settings from "./pages/Settings.jsx";
 import Welcome from "./pages/Welcome.jsx";
 import Board from "./pages/Board.jsx";
+import Completed from "./pages/Completed.jsx"
+import Failed from "./pages/Failed.jsx"
 import './App.css'
 
 
@@ -23,6 +25,7 @@ export default function AppRoutes() {
         <Route path="/" element={<Home />} />
         <Route path="/board" element={<Board />} />
         <Route path="/calendar" element={<Calendar />} />
+        <Route path="/completed" element={<Completed />} />
         <Route path="/frame/:categoryId" element={<TasksByCategory />} />
       </Route>
 
