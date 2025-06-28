@@ -23,7 +23,7 @@ const TasksByCategory = () => {
                 const data = await res.json();
                 if (res.ok) {
                     setCategoryName(data.name);
-                    console.log(data)
+                  
                 }
                 else {
                     console.error("Fetch error:", data.error)
@@ -42,6 +42,7 @@ const TasksByCategory = () => {
                 });
                 const data = await res.json();
                 if (res.ok) {
+                    console.log(data);
                     setTasks(data);
                 }
                 else {
@@ -50,12 +51,12 @@ const TasksByCategory = () => {
             } catch (err) {
                 console.error("Server error:", err)
             }
-            console.log(taskChange)
+            
             setTaskChange(false)
         }
         fetchCategoryName();
         fetchTasks();
-    }, [categoryId, taskChange])
+    }, [categoryId])
 
     return (
         <div className="h-full w-full p-12 flex justify-center">

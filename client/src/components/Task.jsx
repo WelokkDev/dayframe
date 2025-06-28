@@ -7,7 +7,6 @@ const Task = ({ task, setTaskChange }) => {
     const checkmarkStyles = `fill-[var(--accent)] rounded-xl  border border-[var(--accent)] w-12 hover:bg-[#332929]`;
     const checkmarkStylesTwo = `fill-[var(--accent)] rounded-xl border-5 border border-[var(--accent)] w-12 hover:bg-[var(--accent)] hover:fill-[var(--background)] `;
     const [completed, setCompleted] = useState(false);
-    const [fail, setFail] = useState(false);
     const [failureReason, setFailureReason] = useState("")
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -15,29 +14,6 @@ const Task = ({ task, setTaskChange }) => {
         setTaskChange(true)
     }, [completed])
 
-    useEffect(async () => {
-    try {
-                
-                const res = await fetchWithAuth(`http://localhost:3000/tasks/${task.id}`, {
-                    method: "PATCH",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ completed_at: null, cancelled: true, failure_reason: failureReason })
-                })
-
-                if (!res.ok) {
-                    const error = await res.json();
-                    console.error("Completion failed:", error);
-                }
-                else {
-                    setCompleted(true);
-                }
-
-            } catch (err) {
-                console.error("Server error:", err)
-            }
-    }, [fail])
 
     const iconWrapperStyles = `
     w-8 h-8 
@@ -91,10 +67,29 @@ const Task = ({ task, setTaskChange }) => {
     const test = () => {
         setIsModalOpen(true)
     }
-    const handleCancel = async () => {
-        setIsModalOpen(true);
-        
-    }
+
+    const handleFailureSubmit = async () => {
+            try {
+                const res = await fetchWithAuth(`http://localhost:3000/tasks/${task.id}`, {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ completed_at: null, cancelled: true, failure_reason: failureReason })
+                })
+
+                if (!res.ok) {
+                    const error = await res.json();
+                    console.error("Completion failed:", error);
+                }
+                else {
+                    setCompleted(true);
+                }
+
+            } catch (err) {
+                console.error("Server error:", err)
+            }
+        }
 
     return (
         <div className="bg-[var(--background)] text-[var(--foreground)] w-full p-4 rounded-xl flex items-center justify-between">
@@ -106,13 +101,13 @@ const Task = ({ task, setTaskChange }) => {
                 </div>
                 <p className="text-xl" onClick={test}>{task.title} </p>
             </div>
-                <div className={iconWrapperStyles} onClick={handleCancel}>
+                <div className={iconWrapperStyles} onClick={() => setIsModalOpen(true)}>
                     <svg xmlns="http://www.w3.org/2000/svg" className={cancelStyles}  viewBox="0 0 16 16">
                     <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
                     </svg>
                 </div>
                 
-            <FailureModal isOpen={isModalOpen} setFailureReason={setFailureReason} setFail={setFail} onClose={() => setIsModalOpen(false)}/>
+            <FailureModal isOpen={isModalOpen} setFailureReason={setFailureReason} handleFailureSubmit={handleFailureSubmit} onClose={() => setIsModalOpen(false)}/>
         </div>
 
     )

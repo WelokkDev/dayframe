@@ -24,7 +24,7 @@ export default function AppRoutes() {
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/board" element={<Board />} />
-        <Route path="/calendar" element={<Calendar />} />
+        <Route path="/failed" element={<Failed />} />
         <Route path="/completed" element={<Completed />} />
         <Route path="/frame/:categoryId" element={<TasksByCategory />} />
       </Route>

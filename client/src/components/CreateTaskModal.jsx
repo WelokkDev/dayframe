@@ -30,7 +30,7 @@ const CreateTaskModal = ( {categories, isOpen, onClose } ) => {
   const resetForm = () => {
     setTitle("");
     setDescription("");
-    setCategory(1);
+    setCategory(null);
     setStartDate(null);
     setEndDate(null);
     setRepeat({
@@ -43,7 +43,7 @@ const CreateTaskModal = ( {categories, isOpen, onClose } ) => {
   
   const handleCreateTask = async (e) => {
     e.preventDefault();
-    if (title !== "" && startDate !== null) {
+    if (title !== "" && startDate !== null && category !== null) {
       setLoading(true);
       try {
         const res = await fetchWithAuth("http://localhost:3000/tasks", {
@@ -128,7 +128,7 @@ const CreateTaskModal = ( {categories, isOpen, onClose } ) => {
                 <RepeatForm repeat={repeat} setRepeat={setRepeat} />
               </div>
 
-              <Select value={category} onChange={(e) => setCategory(e.target.value)} options={categories.map((category) => (
+              <Select value={category} placeholder="Please select a category" onChange={(e) => setCategory(e.target.value)} options={categories.map((category) => (
                 {label: category.name, value: category.id}
               ))}/>
 

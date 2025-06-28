@@ -8,7 +8,7 @@ export default function Failed() {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const res = await fetchWithAuth(`http://localhost:3000/tasks`, {
+        const res = await fetchWithAuth(`http://localhost:3000/tasks?failed`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json"
@@ -33,6 +33,12 @@ export default function Failed() {
     <div className="text-[var(--text-dark)]">
       <h1 className="text-xl font-bold ">Welcome to faileed</h1>
       <p className="mt-2 text-[var(--text-muted)]">Here’s what’s on your agenda today...</p>
+      <div>
+         {tasks.map((task) => (
+                        <p>{task.title}</p>
+                        
+                    ))}    
+      </div>
     </div>
   );
 }

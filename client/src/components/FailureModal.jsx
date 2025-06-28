@@ -4,15 +4,17 @@ import Modal from './Modal.jsx';
 import TextField from "./TextField.jsx";
 import Button from "./Button.jsx";
 
-const FailureModal = ({ isOpen, onClose, setFailureReason }) => {
+const FailureModal = ({ isOpen, onClose, setFailureReason, handleFailureSubmit }) => {
   if (!isOpen) return null;
 
   
   
   const base = "relative z-10 w-[90vw] max-w-2xl bg-[var(--foreground)] rounded-xl text-[var(--text-dark)] shadow-xl p-16"
 
-  const handleSubmit = () => {
+  const handleSubmit = (e) => {
+    e.preventDefault();
     setFailureReason("Test failure")
+    handleFailureSubmit();
   }
   
   const handleCancel = () => {
@@ -38,7 +40,7 @@ const FailureModal = ({ isOpen, onClose, setFailureReason }) => {
         <p>*This is required to remove a task</p>
         <div className='flex justify-between'>
           <Button variant="cancel_red" size="xl" onClick={handleCancel}>Cancel</Button>
-          <Button variant="primary" size="xl" type="submit">Submit</Button>
+          <Button variant="primary" size="xl"  onClick={handleSubmit}>Submit</Button>
         </div>
         
       </div>
