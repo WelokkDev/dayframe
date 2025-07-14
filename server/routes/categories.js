@@ -67,6 +67,32 @@ router.get("/:publicId", authenticateToken, async (req, res) => {
 });
 
 
+router.delete("/:publicId", authenticateToken, async (req, res) => {
+  const userId = req.user.userId;
+  const publicId = req.params.publicId;
 
+  try {
+    const check = await pool.query(
+      `SELECT id FROM categories WHERE public_id = $1 AND user_id = $2`,
+      [publicId, userId]
+    );
+
+        if (check.rows.length === 0) {
+      return res.status(404).json({ error: "Category not found or not authorized" });
+    }
+
+    const categoryId = check.rows[0].id;
+
+    // Delete the category — tasks will be auto-deleted via ON DELETE CASCADE
+    await pool.query(
+      `DELETE FROM categories WHERE id = $1`,
+      [categoryId]
+    );
+    res.json({ success: true, message: "Category and associated tasks deleted" });
+  } catch (err) {
+    console.error("Error deleting category:", err.message);
+    res.status(500).json({ error: "Failed to delete category" });
+  }
+})
 
 module.exports = router;

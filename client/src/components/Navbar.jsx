@@ -7,6 +7,7 @@ import CreateFrameModal from './CreateFrameModal.jsx';
 import { useLocation } from "react-router";
 import { useAuth } from "../context/AuthProvider.jsx";
 import { fetchWithAuth } from "../utils/fetchWithAuth";
+import { TrashIcon } from "@radix-ui/react-icons"
 
 export default function Navbar() {
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
@@ -27,6 +28,11 @@ export default function Navbar() {
 
   const getLinkStyle = (path) => {
     return `block px-4 py-2 rounded-xl transition w-full text-left transition-all duration-200 
+  ${currentPath === path ? "bg-[var(--accent)] text-[var(--background)] font-semibold" : "text-[var(--text-light)] hover:bg-[#302727] hover:text-[var(--accent)]"}`
+  } 
+
+  const getCategLinkStyle = (path) => {
+    return `block  rounded-xl transition w-full text-left transition-all duration-200 flex items-center justify-between
   ${currentPath === path ? "bg-[var(--accent)] text-[var(--background)] font-semibold" : "text-[var(--text-light)] hover:bg-[#302727] hover:text-[var(--accent)]"}`
   } 
 
@@ -56,7 +62,32 @@ export default function Navbar() {
     }
   
     fetchCategories();
-  }, []);
+  }, [categories]);
+
+const handleDeleteCateg = async (publicId) => {
+
+  try {
+    const res = await fetchWithAuth(`http://localhost:3000/categories/${publicId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      // Remove from local state
+      setCategories(prev => prev.filter(c => c.public_id !== publicId));
+    } else {
+      alert(data.error || "Failed to delete category.");
+    }
+  } catch (err) {
+    console.error("Error deleting category:", err);
+    alert("Server error. Try again later.");
+  }
+};
+
   
 
   return (
@@ -93,7 +124,10 @@ export default function Navbar() {
             
             {categories.map((category) => (
               <li className="" key={category.public_id}>
-                <Link to={`/frame/${category.public_id}`} className={getLinkStyle(`/frame/${category.public_id}`)}>{category.name}</Link>
+                <Link to={`/frame/${category.public_id}`} className={getCategLinkStyle(`/frame/${category.public_id}`)}>
+                <div className="px-4 py-2">{category.name}</div>
+                  <TrashIcon onClick={() => handleDeleteCateg(category.public_id)} className="w-6 h-6 hover:bg-[#FFEEC7] active:bg-[#FFC94D] rounded-md mr-2"/>
+                </Link>
               </li>
             ))}
           </ul>
