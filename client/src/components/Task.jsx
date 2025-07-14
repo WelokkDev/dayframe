@@ -12,7 +12,7 @@ const Task = ({ task, setTaskChange }) => {
 
     useEffect(() => {
         setTaskChange(true)
-    }, [completed])
+    }, [completed, failureReason])
 
 
     const iconWrapperStyles = `

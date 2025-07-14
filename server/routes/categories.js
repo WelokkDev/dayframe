@@ -33,7 +33,7 @@ router.get("/", authenticateToken, async (req, res) => {
     
     try {
         const result = await pool.query(
-            `SELECT id, name FROM categories WHERE user_id = $1 ORDER BY id DESC`,
+            `SELECT public_id, name FROM categories WHERE user_id = $1 ORDER BY id DESC`,
             [ userId ] 
         );
         res.json(result.rows);
@@ -45,25 +45,27 @@ router.get("/", authenticateToken, async (req, res) => {
 })
 
 // Fetch single category by ID
-router.get("/:id", authenticateToken, async (req, res) => {
-    const userId = req.user.userId;
-    const categoryId = req.params.id;
+router.get("/:publicId", authenticateToken, async (req, res) => {
+  const userId = req.user.userId;
+  const publicId = req.params.publicId;
 
-    try {
-        const result = await pool.query(
-            `SELECT id, name FROM categories WHERE id = $1 and user_id = $2`,
-            [categoryId, userId]
-        );
+  try {
+    const result = await pool.query(
+      `SELECT public_id, name FROM categories WHERE public_id = $1 AND user_id = $2`,
+      [publicId, userId]
+    );
 
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: "Category not found" });
-        }
-        res.json(result.rows[0]);
-    } catch (err) {
-        console.error("Error fetching category by ID:", err.message);
-        res.status(500).json({ error: "Failed to fetch category" });
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Category not found" });
     }
-})
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error("Error fetching category by public_id:", err.message);
+    res.status(500).json({ error: "Failed to fetch category" });
+  }
+});
+
 
 
 

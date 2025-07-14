@@ -31,6 +31,7 @@ export default function Navbar() {
   } 
 
   useEffect(() => {
+    
     const fetchCategories = async () => {
       try {
         const res = await fetchWithAuth("http://localhost:3000/categories", {
@@ -43,6 +44,7 @@ export default function Navbar() {
         const data = await res.json()
         if (res.ok) {
           setCategories(data);
+          console.log(data)
         } else {
           console.error("Fetch error:", data.error)
         }
@@ -90,8 +92,8 @@ export default function Navbar() {
             </div>
             
             {categories.map((category) => (
-              <li className="">
-                <Link to={`/frame/${category.id}`} className={getLinkStyle(`/frame/${category.id}`)}>{category.name}</Link>
+              <li className="" key={category.public_id}>
+                <Link to={`/frame/${category.public_id}`} className={getLinkStyle(`/frame/${category.public_id}`)}>{category.name}</Link>
               </li>
             ))}
           </ul>

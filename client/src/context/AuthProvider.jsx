@@ -37,7 +37,6 @@ const AuthProvider = ({ children }) => {
     }, []);
     
     const tryRefresh = async () => {
-        console.log("REFRESH HAS BEEN TREID")
         try {
             const res = await fetch("http://localhost:3000/refresh", { method: "POST", credentials: "include" });
             

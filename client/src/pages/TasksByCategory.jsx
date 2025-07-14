@@ -6,6 +6,7 @@ import Task from "../components/Task.jsx"
 
 const TasksByCategory = () => {
     const { categoryId } = useParams();
+    console.log(categoryId);
     const [categoryName, setCategoryName] = useState("")
     const [tasks, setTasks] = useState([])
     const [taskChange, setTaskChange] = useState(false);
@@ -34,7 +35,7 @@ const TasksByCategory = () => {
         }
         const fetchTasks = async () => {
             try {
-                const res = await fetchWithAuth(`http://localhost:3000/tasks?categoryId=${categoryId}&status=incomplete`, {
+                const res = await fetchWithAuth(`http://localhost:3000/tasks?publicId=${categoryId}&status=incomplete`, {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json"
@@ -56,7 +57,7 @@ const TasksByCategory = () => {
         }
         fetchCategoryName();
         fetchTasks();
-    }, [categoryId])
+    }, [categoryId, taskChange])
 
     return (
         <div className="h-full w-full p-12 flex justify-center">

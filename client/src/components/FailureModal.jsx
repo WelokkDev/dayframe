@@ -2,23 +2,26 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import Modal from './Modal.jsx';
 import TextField from "./TextField.jsx";
+import { useState } from 'react';
 import Button from "./Button.jsx";
 
 const FailureModal = ({ isOpen, onClose, setFailureReason, handleFailureSubmit }) => {
   if (!isOpen) return null;
 
+  const [input, setInput] = useState("")
   
   
   const base = "relative z-10 w-[90vw] max-w-2xl bg-[var(--foreground)] rounded-xl text-[var(--text-dark)] shadow-xl p-16"
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setFailureReason("Test failure")
+    setFailureReason(input)
     handleFailureSubmit();
+    onClose()
   }
   
   const handleCancel = () => {
-    setFailureReason("")
+    setInput("")
     onClose();
   }
 
@@ -36,7 +39,7 @@ const FailureModal = ({ isOpen, onClose, setFailureReason, handleFailureSubmit }
         className={`${base} space-y-4 `}
         onClick={(e) => e.stopPropagation()}
       >
-        <TextField>Why did you fail?</TextField>
+        <TextField value={input} onChange={(e) => setInput(e.target.value)}>Why did you fail?</TextField>
         <p>*This is required to remove a task</p>
         <div className='flex justify-between'>
           <Button variant="cancel_red" size="xl" onClick={handleCancel}>Cancel</Button>

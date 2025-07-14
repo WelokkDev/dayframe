@@ -17,7 +17,7 @@ const CreateTaskModal = ( {categories, isOpen, onClose } ) => {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState(1)
+  const [category, setCategory] = useState("")
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [repeat, setRepeat] = useState({
@@ -30,7 +30,7 @@ const CreateTaskModal = ( {categories, isOpen, onClose } ) => {
   const resetForm = () => {
     setTitle("");
     setDescription("");
-    setCategory(null);
+    setCategory("");
     setStartDate(null);
     setEndDate(null);
     setRepeat({
@@ -43,7 +43,7 @@ const CreateTaskModal = ( {categories, isOpen, onClose } ) => {
   
   const handleCreateTask = async (e) => {
     e.preventDefault();
-    if (title !== "" && startDate !== null && category !== null) {
+    if (title !== "" && startDate !== null && category !== "") {
       setLoading(true);
       try {
         const res = await fetchWithAuth("http://localhost:3000/tasks", {
@@ -100,8 +100,12 @@ const CreateTaskModal = ( {categories, isOpen, onClose } ) => {
     console.log(repeat)
   }
 
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  }
   return (
-    <Modal isOpen={isOpen} onClose={onClose} >
+    <Modal isOpen={isOpen} onClose={handleClose} >
         <form className="flex flex-col gap-y-4">
           { step === 0 ? (
             <>
