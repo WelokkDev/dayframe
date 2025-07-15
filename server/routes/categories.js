@@ -33,7 +33,7 @@ router.get("/", authenticateToken, async (req, res) => {
     
     try {
         const result = await pool.query(
-            `SELECT public_id, name FROM categories WHERE user_id = $1 ORDER BY id DESC`,
+            `SELECT id, name FROM categories WHERE user_id = $1 ORDER BY id DESC`,
             [ userId ] 
         );
         res.json(result.rows);
@@ -45,14 +45,15 @@ router.get("/", authenticateToken, async (req, res) => {
 })
 
 // Fetch single category by ID
-router.get("/:publicId", authenticateToken, async (req, res) => {
+router.get("/:id", authenticateToken, async (req, res) => {
   const userId = req.user.userId;
-  const publicId = req.params.publicId;
+  const id = req.params.id;
+  console.log("WHAT THE", id)
 
   try {
     const result = await pool.query(
-      `SELECT public_id, name FROM categories WHERE public_id = $1 AND user_id = $2`,
-      [publicId, userId]
+      `SELECT id, name FROM categories WHERE id = $1 AND user_id = $2`,
+      [id, userId]
     );
 
     if (result.rows.length === 0) {
@@ -61,20 +62,21 @@ router.get("/:publicId", authenticateToken, async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (err) {
-    console.error("Error fetching category by public_id:", err.message);
+    console.error("Error fetching category by id:", err.message);
     res.status(500).json({ error: "Failed to fetch category" });
   }
 });
 
 
-router.delete("/:publicId", authenticateToken, async (req, res) => {
+
+router.delete("/:id", authenticateToken, async (req, res) => {
   const userId = req.user.userId;
-  const publicId = req.params.publicId;
+  const id = req.params.id;
 
   try {
     const check = await pool.query(
-      `SELECT id FROM categories WHERE public_id = $1 AND user_id = $2`,
-      [publicId, userId]
+      `SELECT id FROM categories WHERE id = $1 AND user_id = $2`,
+      [id, userId]
     );
 
         if (check.rows.length === 0) {

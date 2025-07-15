@@ -50,7 +50,7 @@ export default function Navbar() {
         const data = await res.json()
         if (res.ok) {
           setCategories(data);
-          console.log(data)
+          console.log("ZZZZZ", data)
         } else {
           console.error("Fetch error:", data.error)
         }
@@ -58,16 +58,19 @@ export default function Navbar() {
         console.error("Server error:", err)
       } finally {
         setLoading(false);
+        
       }
     }
   
     fetchCategories();
-  }, [categories]);
+  }, [isCreateFrameOpen]);
 
-const handleDeleteCateg = async (publicId) => {
+
+
+const handleDeleteCateg = async (id) => {
 
   try {
-    const res = await fetchWithAuth(`http://localhost:3000/categories/${publicId}`, {
+    const res = await fetchWithAuth(`http://localhost:3000/categories/${id}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -78,7 +81,7 @@ const handleDeleteCateg = async (publicId) => {
 
     if (res.ok) {
       // Remove from local state
-      setCategories(prev => prev.filter(c => c.public_id !== publicId));
+      setCategories(prev => prev.filter(c => c.id !== id));
     } else {
       alert(data.error || "Failed to delete category.");
     }
@@ -106,9 +109,6 @@ const handleDeleteCateg = async (publicId) => {
                 Today
               </Link>
             </li>
-            <li>
-              <Link to="/board" className={getLinkStyle("/board")}>Board</Link>
-            </li>
 
             <li>
               <Link to="/completed" className={getLinkStyle("/completed")}>Completed</Link>
@@ -123,10 +123,10 @@ const handleDeleteCateg = async (publicId) => {
             </div>
             
             {categories.map((category) => (
-              <li className="" key={category.public_id}>
-                <Link to={`/frame/${category.public_id}`} className={getCategLinkStyle(`/frame/${category.public_id}`)}>
+              <li className="" key={category.id}>
+                <Link to={`/frame/${category.id}`} className={getCategLinkStyle(`/frame/${category.id}`)}>
                 <div className="px-4 py-2">{category.name}</div>
-                  <TrashIcon onClick={() => handleDeleteCateg(category.public_id)} className="w-6 h-6 hover:bg-[#FFEEC7] active:bg-[#FFC94D] rounded-md mr-2"/>
+                  <TrashIcon onClick={() => handleDeleteCateg(category.id)} className="w-6 h-6 hover:bg-[#FFEEC7] active:bg-[#FFC94D] rounded-md mr-2"/>
                 </Link>
               </li>
             ))}

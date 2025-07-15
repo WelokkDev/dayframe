@@ -6,7 +6,6 @@ import Task from "../components/Task.jsx"
 
 const TasksByCategory = () => {
     const { categoryId } = useParams();
-    console.log(categoryId);
     const [categoryName, setCategoryName] = useState("")
     const [tasks, setTasks] = useState([])
     const [taskChange, setTaskChange] = useState(false);
@@ -24,7 +23,6 @@ const TasksByCategory = () => {
                 const data = await res.json();
                 if (res.ok) {
                     setCategoryName(data.name);
-                  
                 }
                 else {
                     console.error("Fetch error:", data.error)
@@ -35,7 +33,7 @@ const TasksByCategory = () => {
         }
         const fetchTasks = async () => {
             try {
-                const res = await fetchWithAuth(`http://localhost:3000/tasks?publicId=${categoryId}&status=incomplete`, {
+                const res = await fetchWithAuth(`http://localhost:3000/tasks?categoryId=${categoryId}&status=incomplete`, {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json"
@@ -43,7 +41,6 @@ const TasksByCategory = () => {
                 });
                 const data = await res.json();
                 if (res.ok) {
-                    console.log(data);
                     setTasks(data);
                 }
                 else {

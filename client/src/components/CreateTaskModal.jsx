@@ -2,7 +2,7 @@ import Modal from './Modal.jsx';
 import Button from "./Button.jsx";
 import TextField from "./TextField.jsx";
 import Select from "./Select.jsx";
-import DatePicker from "./RangeDatePicker.jsx"
+import DatePicker from "./DatePicker.jsx"
 import ButtonTabs from "./ButtonTabs.jsx";
 import RepeatForm from "./RepeatForm.jsx";
 import Toggle from "./Toggle.jsx";
@@ -17,9 +17,8 @@ const CreateTaskModal = ( {categories, isOpen, onClose } ) => {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("")
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
+  const [category, setCategory] = useState(null)
+  const [dueDate, setDueDate] = useState(null);
   const [repeat, setRepeat] = useState({
     repeat_is_true: false,
     repeat_interval: 1,
@@ -30,9 +29,8 @@ const CreateTaskModal = ( {categories, isOpen, onClose } ) => {
   const resetForm = () => {
     setTitle("");
     setDescription("");
-    setCategory("");
-    setStartDate(null);
-    setEndDate(null);
+    setCategory(null);
+    setDueDate(null);
     setRepeat({
       repeat_is_true: false,
       repeat_interval: 1,
@@ -42,8 +40,10 @@ const CreateTaskModal = ( {categories, isOpen, onClose } ) => {
   }
   
   const handleCreateTask = async (e) => {
+    console.log(category)
     e.preventDefault();
-    if (title !== "" && startDate !== null && category !== "") {
+    console.log("A")
+    if (title !== "" && dueDate !== null && category !== null) {
       setLoading(true);
       try {
         const res = await fetchWithAuth("http://localhost:3000/tasks", {
@@ -55,8 +55,7 @@ const CreateTaskModal = ( {categories, isOpen, onClose } ) => {
             title: title,
             description: description,
             category_id: category,
-            start_date: startDate,
-            end_date: startDate,
+            due_date: dueDate,
             repeat_is_true: repeat.repeat_is_true,
             repeat_interval: repeat.repeat_interval,
             repeat_unit: repeat.repeat_unit,
@@ -64,9 +63,10 @@ const CreateTaskModal = ( {categories, isOpen, onClose } ) => {
           })
         });
         const data = await res.json()
-
+        
+      console.log(data)
         if (res.ok) {
-          console.log("Created category:", data);
+          console.log("Created task:", data);
           onClose();
           resetForm();
 
@@ -90,19 +90,16 @@ const CreateTaskModal = ( {categories, isOpen, onClose } ) => {
     console.log("THERE BE ERRRORS FIX THEM!")
   }
 
-  const handleSubmit = () => {
-    console.log(title)
-    console.log(description)
-    console.log("ALRIGHTY")
-    console.log(startDate);
-    console.log(endDate);
-    console.log(category)
-    console.log(repeat)
-  }
+
 
   const handleClose = () => {
     resetForm();
     onClose();
+  }
+
+  const test = (e) => {
+    console.log(categories)
+    setCategory(e.target.value)
   }
   return (
     <Modal isOpen={isOpen} onClose={handleClose} >
@@ -112,27 +109,21 @@ const CreateTaskModal = ( {categories, isOpen, onClose } ) => {
               <div className="flex flex-col gap-x-4">
                 <TextField value={title} onChange={(e) => setTitle(e.target.value)}>Task Title</TextField>
               </div>
-              <TextField value={description} onChange={(e) => setDescription(e.target.value)}>Optional Description</TextField>
               <div className="flex flex-row gap-x-4">
-                <DatePicker onDatesChange={(start, end) => {
-                  setStartDate(start);
-                  setEndDate(end);
-                }}>
-                  { startDate === null ? (
-                    <p>Pick Date(s) for Task</p>
-                  ) : ( format(startDate, "yyyy-MM-dd") === format(endDate, "yyyy-MM-dd") ? (
-                        <div>{format(startDate, "MMM dd")}</div>
-                    ) : (
-                      <div> {format(startDate, "MMM dd")} - {format(endDate, "MMM dd")}</div>
-                    )
-                  )
-
+                <DatePicker date={dueDate} setDate={setDueDate}>
+                  { dueDate === null ? (
+                    <p>Pick Due Date for Task</p>
+                  ) : ( 
+                        <div>{format(dueDate, "MMM dd")}</div>
+                    ) 
+                  
+  
                   }
                 </DatePicker>
                 <RepeatForm repeat={repeat} setRepeat={setRepeat} />
               </div>
 
-              <Select value={category} placeholder="Please select a category" onChange={(e) => setCategory(e.target.value)} options={categories.map((category) => (
+              <Select value={category} placeholder="Please select a category" onChange={test} options={categories.map((category) => (
                 {label: category.name, value: category.id}
               ))}/>
 

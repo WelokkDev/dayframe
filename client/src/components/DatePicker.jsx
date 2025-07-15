@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addMonths, subMonths, eachDayOfInterval } from "date-fns";
 import MiniCalendar from "./MiniCalendarSingleSelect";
 
-const DatePicker = ({ children, repeatEndDate, setRepeatEndDate }) => {
+const DatePicker = ({ children, date, setDate }) => {
   const [selectedDate, setSelectedDate] = useState(null);
 
   const [isOpen, setIsOpen] = useState(false)
@@ -38,19 +38,19 @@ const DatePicker = ({ children, repeatEndDate, setRepeatEndDate }) => {
     const inactiveClass = "border border-gray-300 hover:border-[var(--accent)] hover:border-2";
 
     const handleSelect = (date) => {
-        setRepeatEndDate(date);
+        setDate(date);
     }
 
     return (
         <div className="relative w-full" ref={pickerRef} onClick={(e) => e.stopPropagation()}>
         
         <button type="button" onClick={(e) => handleClick(e)} className={` rounded-md px-2 py-2 focus:outline-none w-full
-            ${repeatEndDate === null ? inactiveClass : activeClass}`}>
+            ${date === null ? inactiveClass : activeClass}`}>
             {children}
         </button>
         {isOpen && (
             <div className="absolute z-50 mt-2 bg-white rounded-lg shadow-lg p-4 border border-gray-200 w-max">
-            <MiniCalendar selectedDate={repeatEndDate} onChange={handleSelect} />    
+            <MiniCalendar selectedDate={date} onChange={handleSelect} />    
             </div>
         )}
         </div>

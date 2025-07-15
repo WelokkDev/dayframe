@@ -1,9 +1,11 @@
 import { fetchWithAuth } from "../utils/fetchWithAuth";
 import { useState, useEffect } from 'react';
+import Task from "../components/Task";
 
 export default function Home() {
 
   const [tasks, setTasks] = useState([]);
+  const [taskChange, setTaskChange] = useState(false);
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -30,9 +32,24 @@ export default function Home() {
   }, [])
 
   return (
-    <div className="text-[var(--text-dark)]">
-      <h1 className="text-xl font-bold ">Welcome back</h1>
-      <p className="mt-2 text-[var(--text-muted)]">Here’s what’s on your agenda today...</p>
-    </div>
+        <div className="h-full w-full p-12 flex justify-center">
+            
+            {tasks.length === 0 ? (
+                <div className="text-[var(--background)] w-full h-full flex flex-col justify-center items-center space-y-4">
+                    <h1 className="text-4xl">You have no tasks today!</h1>
+                </div>
+            ) : (
+                <div className=" flex flex-col items-center w-1/3">
+                    <h1 className="text-4xl text-left text-[var(--background)]">Tasks for Today</h1>
+                    <div className="space-y-2 mt-8 w-full">
+
+                      {tasks.map((task) => (
+                        <Task task={task} setTaskChange={setTaskChange}/>
+                        
+                    ))}    
+                   </div>
+                </div>
+            )}
+        </div>
   );
 }

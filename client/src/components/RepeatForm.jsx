@@ -95,7 +95,7 @@ const RepeatForm = ({ repeat, setRepeat }) => {
           <p className="font-semibold ">Ends</p>
           <div className="flex items-center gap-x-2 pb-4">
             <Toggle value={repeatEndDate} onChange={setRepeatEndDate}>Never</Toggle>
-            <DatePicker repeatEndDate={repeatEndDate} setRepeatEndDate={setRepeatEndDate}>Pick Date</DatePicker>
+            <DatePicker date={repeatEndDate} setDate={setRepeatEndDate}>Pick Date</DatePicker>
           </div>
           <div className="flex justify-between">
             <Button size="xl" variant="cancel_red" onClick={handleCancel}>Cancel</Button>

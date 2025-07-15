@@ -3,6 +3,9 @@ const router = express.Router();
 const pool = require('../db');
 const authenticateToken = require('../middleware/authMiddleware'); 
 
+
+
+
 // Create a new task
 router.post("/", authenticateToken, async (req, res) => {
 
@@ -14,8 +17,7 @@ router.post("/", authenticateToken, async (req, res) => {
         title,
         description,
         category_id,
-        start_date,
-        end_date,
+        due_date,
         repeat_is_true,
         repeat_interval,
         repeat_unit,
@@ -25,11 +27,11 @@ router.post("/", authenticateToken, async (req, res) => {
     try {
         const result = await pool.query(
             `INSERT INTO tasks (
-                user_id, title, description, category_id, start_date, end_date,
+                user_id, title, description, category_id, due_date,
                 repeat_is_true, repeat_interval, repeat_unit, repeat_ends_on
-            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
             [
-                userId, title, description, category_id, start_date, end_date,
+                userId, title, description, category_id, due_date,
                 repeat_is_true, repeat_interval, repeat_unit, repeat_ends_on
             ]
         );
@@ -72,7 +74,10 @@ router.get("/", authenticateToken, async (req, res) => {
     }
 })
 
+
+
 router.patch("/:id", authenticateToken, async (req, res) => {
+    console.log("MORE TESTSS")
     const userId = req.user.userId;
     const taskId = req.params.id;
     const { completed_at, cancelled, failure_reason } = req.body;
