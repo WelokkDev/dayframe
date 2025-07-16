@@ -46,6 +46,7 @@ router.get("/", authenticateToken, async (req, res) => {
     const userId = req.user.userId;
     const categoryId = req.query.categoryId;
     const status = req.query.status;
+    const dueToday = req.query.dueToday === "true";
     
     try {
         let baseQuery = `SELECT * FROM tasks where user_id = $1`;
@@ -63,6 +64,11 @@ router.get("/", authenticateToken, async (req, res) => {
         } else if (status == "failed") {
             baseQuery += ` AND cancelled = TRUE`;
         }
+
+        if (dueToday) {
+            baseQuery += ` AND due_date = CURRENT_DATE`;
+        }
+
         baseQuery += ` ORDER BY created_at DESC`;
 
         const result = await pool.query(baseQuery, queryParams)

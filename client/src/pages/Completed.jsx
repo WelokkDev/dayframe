@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { fetchWithAuth } from "../utils/fetchWithAuth";
+import { ClockIcon } from "@radix-ui/react-icons"
+import { format } from "date-fns";
 
 const Completed = () => {
     const currentPath = location.pathname; 
@@ -34,17 +36,34 @@ const Completed = () => {
     }, [])
 
 
-  return (
-    <div className="text-[var(--text-dark)]">
-        <h1 className="text-xl font-bold ">Welcome to completed!</h1>
-        <div className="text-[var(--text-dark)]">
-            {tasks.map((task) => (
-                <p className="text-[var(--text-dark)]">{task.title}</p>
-            ))}
+    return (
+        <div className="h-full w-full p-12 flex justify-center">
+            
+            {tasks.length === 0 ? (
+                <div className="text-[var(--background)] w-full h-full flex flex-col justify-center items-center space-y-4">
+                    <h1 className="text-4xl">You have yet to complete any tasks! </h1>
+                </div>
+            ) : (
+                <div className=" flex flex-col items-center w-full">
+                    <h1 className="text-4xl text-left text-[var(--background)]">Failed Tasks</h1>
+                    <div className="space-y-2 mt-8 w-full max-w-[600px]">
+                    {tasks.map((task) => (
+                        <div className="bg-[var(--background)] text-[var(--foreground)] p-4 rounded-xl flex items-center justify-between w-full">
+                            <div className="flex gap-x-2 items-center w-full">
+                                <div className="flex flex-col justify-left ml-2 ">
+                                    <div className="flex gap-x-2"><ClockIcon/><p className="text-xs text-[var(--accent)]" >Completed at {format(new Date(task.completed_at), "MMM d")} </p></div>
+                                    <p className="text-md" >{task.title} </p>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                   </div>
+                </div>
+            )}
         </div>
-    </div>
+
    
-  );
+    );
 };
 
 export default Completed;
