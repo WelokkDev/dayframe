@@ -82,6 +82,12 @@ const handleDeleteCateg = async (id) => {
     if (res.ok) {
       // Remove from local state
       setCategories(prev => prev.filter(c => c.id !== id));
+
+      // Redirect to today page, if user is currently viewing deleted category page
+      if (location.pathname === `/categories/${id}`) {
+        navigate("/");
+      }
+
     } else {
       alert(data.error || "Failed to delete category.");
     }

@@ -39,7 +39,9 @@ const Task = ({ task }) => {
         <div className="bg-[var(--background)] text-[var(--foreground)] w-full p-4 rounded-xl flex items-center justify-between">
             <div className="flex gap-x-2 items-center">
                 <div className="flex flex-col justify-left ml-2">
-                    <div className="flex gap-x-2"><QuestionMarkCircledIcon className="hover:bg-stone-600" onClick={() => setIsModalOpen(true)} /><p className="text-xs text-[var(--accent)]" >Why did you fail? </p></div>
+                    <div className="flex gap-x-2"><QuestionMarkCircledIcon className="hover:bg-stone-600" onClick={() => setIsModalOpen(true)} />
+                        <p className="text-xs text-[var(--accent)]" >Why did you fail? </p>
+                    </div>
                     <p className="text-md" >{task.title} </p>
                     
                 </div>

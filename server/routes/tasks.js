@@ -49,6 +49,66 @@ router.get("/", authenticateToken, async (req, res) => {
     const dueToday = req.query.dueToday === "true";
     
     try {
+
+        // 1. Auto-cancel any overdue tasks
+        await pool.query(
+            `
+                UPDATE tasks
+                SET cancelled = TRUE, failure_reason = COALESCE(failure_reason, 'Missed deadline')
+                WHERE completed_at IS NULL AND cancelled = FALSE AND due_date < CURRENT_DATE
+            `
+        )
+
+        // 2. Auto-generate next tasks based on the user given repeat logic
+        await pool.query(
+            `
+                WITH to_spawn AS (
+                SELECT
+                    id AS src_id,
+                    user_id,
+                    title,
+                    description,
+                    category_id,
+                    repeat_is_true,
+                    repeat_interval,
+                    repeat_unit,
+                    repeat_ends_on,
+                    CASE repeat_unit
+                    WHEN 'day'   THEN due_date + (repeat_interval::text || ' day')::interval
+                    WHEN 'week'  THEN due_date + (repeat_interval::text || ' week')::interval
+                    WHEN 'month' THEN due_date + (repeat_interval::text || ' month')::interval
+                    END AS next_due
+                FROM tasks
+                WHERE user_id = $1
+                    AND repeat_is_true = TRUE
+                    AND due_date < CURRENT_DATE
+                    AND (repeat_ends_on IS NULL OR
+                        (CASE repeat_unit
+                            WHEN 'day'   THEN due_date + (repeat_interval::text || ' day')::interval
+                            WHEN 'week'  THEN due_date + (repeat_interval::text || ' week')::interval
+                            WHEN 'month' THEN due_date + (repeat_interval::text || ' month')::interval
+                        END) <= repeat_ends_on)
+                ),
+                inserted AS (
+                INSERT INTO tasks (
+                    user_id, title, description, category_id, due_date,
+                    repeat_is_true, repeat_interval, repeat_unit, repeat_ends_on
+                )
+                SELECT
+                    user_id, title, description, category_id, next_due,
+                    repeat_is_true, repeat_interval, repeat_unit, repeat_ends_on
+                FROM to_spawn
+                RETURNING id
+                )
+                UPDATE tasks
+                SET repeat_is_true = FALSE
+                WHERE id IN (SELECT src_id FROM to_spawn);
+            `,
+            [userId]
+        );
+
+
+        // 3. Build main query to return tasks
         let baseQuery = `SELECT * FROM tasks where user_id = $1`;
         const queryParams = [userId];
 

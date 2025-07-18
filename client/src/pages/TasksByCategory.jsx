@@ -65,9 +65,9 @@ const TasksByCategory = () => {
                     <h2 className="text-3xl">Please create a task!</h2>
                 </div>
             ) : (
-                <div className=" flex flex-col items-center w-1/3">
+                <div className=" flex flex-col items-center w-full">
                     <h1 className="text-4xl text-left text-[var(--background)]">{categoryName}</h1>
-                    <div className="space-y-2 mt-8 w-full">
+                    <div className="space-y-2 mt-8 w-full max-w-[600px]">
                     {tasks.map((task) => (
                         <Task task={task} setTaskChange={setTaskChange}/>
                         
