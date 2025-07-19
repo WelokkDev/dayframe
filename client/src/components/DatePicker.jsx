@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addMonths, subMonths, eachDayOfInterval } from "date-fns";
-import MiniCalendar from "./MiniCalendarSingleSelect";
+import MiniCalendar from "./MiniCalendar";
 
 const DatePicker = ({ children, date, setDate }) => {
   const [selectedDate, setSelectedDate] = useState(null);
@@ -44,15 +44,16 @@ const DatePicker = ({ children, date, setDate }) => {
     return (
         <div className="relative w-full" ref={pickerRef} onClick={(e) => e.stopPropagation()}>
         
-        <button type="button" onClick={(e) => handleClick(e)} className={` rounded-md px-2 py-2 focus:outline-none w-full
-            ${date === null ? inactiveClass : activeClass}`}>
-            {children}
-        </button>
-        {isOpen && (
-            <div className="absolute z-50 mt-2 bg-white rounded-lg shadow-lg p-4 border border-gray-200 w-max">
-            <MiniCalendar selectedDate={date} onChange={handleSelect} />    
-            </div>
-        )}
+          <button type="button" onClick={(e) => handleClick(e)} className={` rounded-md px-2 py-2 focus:outline-none w-full
+              ${date === null ? inactiveClass : activeClass}`}>
+              {children}
+          </button>
+          {isOpen && (
+              <div className="absolute bottom-full mb-2 z-50 bg-white rounded-lg shadow-lg p-4 border border-gray-200 w-max">
+
+                <MiniCalendar selectedDate={date} onChange={handleSelect} />    
+              </div>
+          )}
         </div>
     );
 };

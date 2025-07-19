@@ -20,7 +20,6 @@ export default function Navbar() {
   const currentPath = location.pathname; 
 
   const handleLogout = () => {
-    console.log("TESTTT")
     logout();
     
     
@@ -50,7 +49,6 @@ export default function Navbar() {
         const data = await res.json()
         if (res.ok) {
           setCategories(data);
-          console.log("ZZZZZ", data)
         } else {
           console.error("Fetch error:", data.error)
         }
@@ -108,8 +106,8 @@ const handleDeleteCateg = async (id) => {
           <button><img src="/chevron-down.svg" className="w-4 h-4 invert" /></button>
         </div>
         <div className="mt-12 space-y-2"> 
-          <Button variant="secondary" size="md" className="w-full" onClick={() => {setIsCreateTaskOpen(true)}}>+ Add Task</Button>
-          <ul className="flex flex-col space-y-2 text-md">
+          <Button variant="primary" size="xl" className="w-full" onClick={() => {setIsCreateTaskOpen(true)}}>+ Add Task</Button>
+          <ul className="flex flex-col space-y-2 text-md mt-12">
             <li className="">
               <Link to="/" className={getLinkStyle("/")}>
                 Today

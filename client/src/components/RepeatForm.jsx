@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addMonths, subMonths, eachDayOfInterval } from "date-fns";
-import MiniCalendar from "./MiniCalendar";
 import TextField from "./TextField";
 import Select from "./Select.jsx";
 import Toggle from "./Toggle.jsx"

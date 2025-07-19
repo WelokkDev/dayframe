@@ -42,7 +42,6 @@ const CreateTaskModal = ( {categories, isOpen, onClose } ) => {
   const handleCreateTask = async (e) => {
     console.log(category)
     e.preventDefault();
-    console.log("A")
     if (title !== "" && dueDate !== null && category !== null) {
       setLoading(true);
       try {
