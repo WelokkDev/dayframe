@@ -8,10 +8,10 @@ import RepeatForm from "./RepeatForm.jsx";
 import Toggle from "./Toggle.jsx";
 import { format } from 'date-fns'
 import { useState } from "react";
-import { fetchWithAuth } from "../utils/fetchWithAuth";
-
+import { useTasks } from "../context/TaskProvider";
 
 const CreateTaskModal = ( {categories, isOpen, onClose } ) => {
+  const { createTask } = useTasks();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false)
 
@@ -40,66 +40,65 @@ const CreateTaskModal = ( {categories, isOpen, onClose } ) => {
   }
   
   const handleCreateTask = async (e) => {
-    console.log(category)
     e.preventDefault();
-    if (title !== "" && dueDate !== null && category !== null) {
-      setLoading(true);
-      try {
-        const res = await fetchWithAuth("http://localhost:3000/tasks", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ 
-            title: title,
-            description: description,
-            category_id: category,
-            due_date: dueDate,
-            repeat_is_true: repeat.repeat_is_true,
-            repeat_interval: repeat.repeat_interval,
-            repeat_unit: repeat.repeat_unit,
-            repeat_ends_on: repeat.repeat_ends_on,
-          })
-        });
-        const data = await res.json()
-        
-      console.log(data)
-        if (res.ok) {
-          console.log("Created task:", data);
-          onClose();
-          resetForm();
+    
 
-        } else {
-          alert(data.error || "Creating task failed.")
-        }
 
-      } catch (err) {
-        console.error("Creating task error:", err);
-        alert("Server error. Try again later.");
-      } finally {
-        setLoading(false);
+    if (!title.trim() || !dueDate || !category) {
+      console.log("Required fields are missing");
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      const taskData = {
+        title: title.trim(),
+        description: description.trim(),
+        category_id: category, // Keep as string since it's a UUID
+        due_date: format(dueDate, 'yyyy-MM-dd'),
+        start_date: format(dueDate, 'yyyy-MM-dd'), // Add start_date if your API needs it
+        repeat_is_true: repeat.repeat_is_true,
+        repeat_interval: repeat.repeat_interval,
+        repeat_unit: repeat.repeat_unit,
+        repeat_ends_on: repeat.repeat_ends_on ? format(repeat.repeat_ends_on, 'yyyy-MM-dd') : null,
+      };
+
+      console.log("Creating task with data:", taskData);
+      console.log("Category ID being sent:", taskData.category_id);
+      console.log("Category ID type:", typeof taskData.category_id);
+      
+      const result = await createTask(taskData);
+      
+      if (result.success) {
+        console.log("Created task:", result.task);
+        onClose();
+        resetForm();
+      } else {
+        console.error("Failed to create task:", result.error);
+        alert(result.error || "Creating task failed.");
       }
-    }
-    else {
-      flagImportant();
+
+    } catch (err) {
+      console.error("Creating task error:", err);
+      alert("Server error. Try again later.");
+    } finally {
+      setLoading(false);
     }
   }
-
-  const flagImportant = () => {
-    console.log("THERE BE ERRRORS FIX THEM!")
-  }
-
-
 
   const handleClose = () => {
     resetForm();
     onClose();
   }
 
-  const test = (e) => {
-    console.log(categories)
-    setCategory(e.target.value)
+  const handleCategoryChange = (e) => {
+    console.log("Selected category value:", e.target.value);
+    console.log("Selected category type:", typeof e.target.value);
+    console.log("Available categories:", categories);
+    setCategory(e.target.value);
   }
+
   return (
     <Modal isOpen={isOpen} onClose={handleClose} >
         <form className="flex flex-col gap-y-4">
@@ -115,29 +114,38 @@ const CreateTaskModal = ( {categories, isOpen, onClose } ) => {
                   ) : ( 
                         <div>{format(dueDate, "MMM dd")}</div>
                     ) 
-                  
-  
                   }
                 </DatePicker>
                 <RepeatForm repeat={repeat} setRepeat={setRepeat} />
               </div>
 
-              <Select value={category} placeholder="Please select a category" onChange={test} options={categories.map((category) => (
-                {label: category.name, value: category.id}
-              ))}/>
+              <Select 
+                value={category} 
+                placeholder="Please select a category" 
+                onChange={handleCategoryChange} 
+                options={categories.map((category) => ({
+                  label: category.name, 
+                  value: category.id
+                }))}
+              />
 
             </>
           ) : (
-            
-              <div>THE SUCCESS SCENE OF FORM CREATION{title}</div>
-            
+            <div>THE SUCCESS SCENE OF FORM CREATION{title}</div>
           )}
           <div className="flex justify-center gap-2 my-4">
-            <Button variant="primary" size="xl" onClick={handleCreateTask}>Create Task</Button>
+            <Button 
+              variant="primary" 
+              size="xl" 
+              onClick={handleCreateTask}
+              
+            >
+              {loading ? "Creating..." : "Create Task"}
+            </Button>
           </div>
         </form>
       </Modal>
   )
-
 }
+
 export default CreateTaskModal

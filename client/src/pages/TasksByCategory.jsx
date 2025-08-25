@@ -1,78 +1,55 @@
 import { useParams } from "react-router";
 import { useAuth } from "../context/AuthProvider.jsx";
-import { fetchWithAuth } from "../utils/fetchWithAuth";
-import { useState, useEffect } from 'react';
+import { useTasks } from "../context/TaskProvider.jsx";
+import { useMemo } from 'react';
 import Task from "../components/Task.jsx"
 
 const TasksByCategory = () => {
     const { categoryId } = useParams();
-    const [categoryName, setCategoryName] = useState("")
-    const [tasks, setTasks] = useState([])
-    const [taskChange, setTaskChange] = useState(false);
+    const { incompleteTasks, getCategoryName, loading } = useTasks(); 
     
-    useEffect(() => {
+    // Filter incomplete tasks for this specific category
+    const categoryTasks = useMemo(() => {
+        console.log("All incomplete tasks:", incompleteTasks);
+        console.log("Looking for category ID:", categoryId);
+        console.log("Category ID type:", typeof categoryId);
         
-        const fetchCategoryName = async () => {
-            try {
-                const res = await fetchWithAuth(`http://localhost:3000/categories/${categoryId}`, {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json"
-                    }
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    setCategoryName(data.name);
-                }
-                else {
-                    console.error("Fetch error:", data.error)
-                }
-            } catch (err) {
-                console.error("Server error:", err)
-            }
-        }
-        const fetchTasks = async () => {
-            try {
-                const res = await fetchWithAuth(`http://localhost:3000/tasks?categoryId=${categoryId}&status=incomplete`, {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json"
-                    }
-                });
-                const data = await res.json();
-                if (res.ok) {
-                    setTasks(data);
-                }
-                else {
-                    console.log("Fetch error:", data.error)
-                }
-            } catch (err) {
-                console.error("Server error:", err)
-            }
-            
-            setTaskChange(false)
-        }
-        fetchCategoryName();
-        fetchTasks();
-    }, [categoryId, taskChange])
+        const filtered = incompleteTasks.filter(task => {
+            console.log("Task category_id:", task.category_id, "Type:", typeof task.category_id);
+            return task.category_id === categoryId;
+        });
+        
+        console.log("Filtered tasks for this category:", filtered);
+        return filtered;
+    }, [incompleteTasks, categoryId]);
+
+    const categoryName = getCategoryName(categoryId);
+
+    if (loading) {
+        return (
+            <div className="h-full w-full p-12 flex justify-center">
+                <div className="text-[var(--background)] w-full h-full flex flex-col justify-center items-center space-y-4">
+                    <h1 className="text-4xl">Loading tasks...</h1>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="h-full w-full p-12 flex justify-center">
-            
-            {tasks.length === 0 ? (
+            {categoryTasks.length === 0 ? (
                 <div className="text-[var(--background)] w-full h-full flex flex-col justify-center items-center space-y-4">
-                    <h1 className="text-4xl">You have no tasks for this category </h1>
+                    <h1 className="text-4xl">You have no incomplete tasks for this category</h1>
                     <h2 className="text-3xl">Please create a task!</h2>
                 </div>
             ) : (
-                <div className=" flex flex-col items-center w-full">
+                <div className="flex flex-col items-center w-full">
                     <h1 className="text-4xl text-left text-[var(--background)]">{categoryName}</h1>
                     <div className="space-y-2 mt-8 w-full max-w-[600px]">
-                    {tasks.map((task) => (
-                        <Task task={task} setTaskChange={setTaskChange}/>
-                        
-                    ))}    
-                   </div>
+                        {categoryTasks.map((task) => (
+                            <Task key={task.id} task={task} />
+                        ))}
+                    </div>
                 </div>
             )}
         </div>

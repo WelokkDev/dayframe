@@ -1,13 +1,16 @@
 
 import './App.css'
 import AuthProvider from "./context/AuthProvider.jsx";
+import TaskProvider from "./context/TaskProvider.jsx";
 import AppRoutes from "./AppRoutes.jsx";
 
 function App() {
   
   return (
     <AuthProvider>
-      <AppRoutes />
+      <TaskProvider>
+        <AppRoutes />
+      </TaskProvider>
     </AuthProvider>
   )
 }

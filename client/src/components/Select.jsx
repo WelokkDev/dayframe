@@ -6,10 +6,10 @@ const Select = ( { options, value, onChange, placeholder="" }) => {
     return (
         <select className={`${base}`} onChange={onChange} value={value}>
             { placeholder !== "" && (
-                <option value="" disabled hidden>{placeholder}</option>
+                <option value={null} >{placeholder}</option>
             )}
             {options.map(option => (
-                <option value={option.value}>{option.label}</option>
+                <option key={option.value} value={option.value}>{option.label}</option>
             ))}
         </select>
     )
