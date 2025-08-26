@@ -9,6 +9,7 @@ const pool = require('./db'); // Import shared db connection
 const authRoutes = require('./routes/auth');
 const categoryRoutes = require('./routes/categories');
 const taskRoutes = require('./routes/tasks');
+const aiRoutes = require('./routes/ai');
 
 
 app.use(cors({
@@ -23,6 +24,10 @@ app.use(express.json());
 app.use('/', authRoutes);
 app.use('/categories', categoryRoutes);
 app.use('/tasks', taskRoutes);
+app.use('/ai', aiRoutes);
+
+
+
 
 
 app.get("/", (req, res) => {
