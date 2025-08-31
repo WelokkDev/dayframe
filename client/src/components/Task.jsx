@@ -36,7 +36,7 @@ const Task = ({ task }) => {
     transition-colors
     `;
 
-    const formattedDate = format(new Date(task.due_date), "MMM d");
+    const formattedDate = task.scheduled_at ? format(new Date(task.scheduled_at), "MMM d") : "No due date";
 
     const handleComplete = async () => {
         const success = await completeTask(task.id);
@@ -71,6 +71,9 @@ const Task = ({ task }) => {
                         <p className="text-xs text-stone-200">{formattedDate}</p>
                     </div>
                     <p className="text-md">{task.title}</p>
+                    {task.original_instruction && (
+                        <p className="text-xs text-stone-400 mt-1">{task.original_instruction}</p>
+                    )}
                 </div>
             </div>
             <div className="flex gap-x-2 justify-end">

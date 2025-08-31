@@ -63,15 +63,15 @@ router.post('/login', async (req, res) => {
         // Set cookies
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
-            secure: true, // Use secure in production
-            sameSite: 'strict',
+            secure: false, // Set to false for development (localhost)
+            sameSite: 'lax', // More permissive for development
             maxAge: 15 * 60 * 1000  // 15 minutes
         });
 
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            secure: true,
-            sameSite: 'strict',
+            secure: false, // Set to false for development (localhost)
+            sameSite: 'lax', // More permissive for development
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
@@ -106,8 +106,8 @@ router.post('/refresh', async (req, res) => {
         // Set new access token cookie
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
-            secure: true,
-            sameSite: "strict",
+            secure: false, // Set to false for development (localhost)
+            sameSite: "lax", // More permissive for development
             maxAge: 15 * 60 * 1000 
         });
 

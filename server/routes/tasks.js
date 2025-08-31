@@ -47,127 +47,232 @@ router.get("/", authenticateToken, async (req, res) => {
     const categoryId = req.query.categoryId;
     const status = req.query.status;
     const dueToday = req.query.dueToday === "true";
+    const date = req.query.date; // For calendar view
     
     try {
-
-        // 1. Auto-cancel any overdue tasks
+        // 1. Auto-cancel any overdue task instances
         await pool.query(
             `
-                UPDATE tasks
-                SET cancelled = TRUE, failure_reason = COALESCE(failure_reason, 'Missed deadline')
-                WHERE completed_at IS NULL AND cancelled = FALSE AND due_date < CURRENT_DATE
+                UPDATE task_instances
+                SET cancelled_at = TRUE, failure_reason = COALESCE(failure_reason, 'Missed deadline')
+                WHERE completed_at IS NULL AND cancelled_at = FALSE AND scheduled_at < CURRENT_TIMESTAMP
             `
-        )
-
-        // 2. Auto-generate next tasks based on the user given repeat logic
-        await pool.query(
-            `
-                WITH to_spawn AS (
-                SELECT
-                    id AS src_id,
-                    user_id,
-                    title,
-                    description,
-                    category_id,
-                    repeat_is_true,
-                    repeat_interval,
-                    repeat_unit,
-                    repeat_ends_on,
-                    CASE repeat_unit
-                    WHEN 'day'   THEN due_date + (repeat_interval::text || ' day')::interval
-                    WHEN 'week'  THEN due_date + (repeat_interval::text || ' week')::interval
-                    WHEN 'month' THEN due_date + (repeat_interval::text || ' month')::interval
-                    END AS next_due
-                FROM tasks
-                WHERE user_id = $1
-                    AND repeat_is_true = TRUE
-                    AND due_date < CURRENT_DATE
-                    AND (repeat_ends_on IS NULL OR
-                        (CASE repeat_unit
-                            WHEN 'day'   THEN due_date + (repeat_interval::text || ' day')::interval
-                            WHEN 'week'  THEN due_date + (repeat_interval::text || ' week')::interval
-                            WHEN 'month' THEN due_date + (repeat_interval::text || ' month')::interval
-                        END) <= repeat_ends_on)
-                ),
-                inserted AS (
-                INSERT INTO tasks (
-                    user_id, title, description, category_id, due_date,
-                    repeat_is_true, repeat_interval, repeat_unit, repeat_ends_on
-                )
-                SELECT
-                    user_id, title, description, category_id, next_due,
-                    repeat_is_true, repeat_interval, repeat_unit, repeat_ends_on
-                FROM to_spawn
-                RETURNING id
-                )
-                UPDATE tasks
-                SET repeat_is_true = FALSE
-                WHERE id IN (SELECT src_id FROM to_spawn);
-            `,
-            [userId]
         );
 
-
-        // 3. Build main query to return tasks
-        let baseQuery = `SELECT * FROM tasks where user_id = $1`;
+        // 2. Build main query to return task instances with task and recurrence info
+        let baseQuery = `
+            SELECT 
+                ti.id as instance_id,
+                ti.scheduled_at,
+                ti.completed_at,
+                ti.cancelled_at,
+                ti.failure_reason,
+                ti.created_at as instance_created_at,
+                t.id as task_id,
+                t.title,
+                t.category_id,
+                t.original_instruction,
+                t.created_at as task_created_at,
+                c.name as category_name,
+                r.frequency,
+                r.interval_value,
+                r.occurrences_per_period,
+                r.days_of_week,
+                r.week_of_month,
+                r.day_of_month,
+                r.preferred_time,
+                r.time_range_start,
+                r.time_range_end,
+                r.end_date,
+                r.end_after_occurrences
+            FROM task_instances ti
+            JOIN tasks t ON ti.task_id = t.id
+            LEFT JOIN categories c ON t.category_id = c.id
+            LEFT JOIN recurrence_rules r ON t.id = r.task_id
+            WHERE t.user_id = $1
+        `;
         const queryParams = [userId];
 
         if (categoryId) {
-            baseQuery += ` AND category_id = $2`;
+            baseQuery += ` AND t.category_id = $2`;
             queryParams.push(categoryId);
         }
 
-        if (status == "completed") {
-            baseQuery += ` AND completed_at IS NOT NULL AND cancelled = FALSE`;
-        } else if (status == "incomplete") {
-            baseQuery += ` AND completed_at IS NULL AND cancelled = FALSE`;
-        } else if (status == "failed") {
-            baseQuery += ` AND cancelled = TRUE`;
+        if (status === "completed") {
+            baseQuery += ` AND ti.completed_at IS NOT NULL AND ti.cancelled_at = FALSE`;
+        } else if (status === "incomplete") {
+            baseQuery += ` AND ti.completed_at IS NULL AND ti.cancelled_at = FALSE`;
+        } else if (status === "failed") {
+            baseQuery += ` AND ti.cancelled_at = TRUE`;
         }
 
         if (dueToday) {
-            baseQuery += ` AND due_date = CURRENT_DATE`;
+            baseQuery += ` AND DATE(ti.scheduled_at) = CURRENT_DATE`;
         }
 
-        baseQuery += ` ORDER BY created_at DESC`;
+        if (date) {
+            baseQuery += ` AND DATE(ti.scheduled_at) = $${queryParams.length + 1}`;
+            queryParams.push(date);
+        }
 
-        const result = await pool.query(baseQuery, queryParams)
-        res.json(result.rows);
+        baseQuery += ` ORDER BY ti.scheduled_at ASC`;
+
+        const result = await pool.query(baseQuery, queryParams);
+        
+        // Transform the data to match the expected format
+        const taskInstances = result.rows.map(row => ({
+            id: row.instance_id, // Use instance ID as primary ID
+            task_id: row.task_id,
+            user_id: userId,
+            title: row.title,
+            category_id: row.category_id,
+            category_name: row.category_name,
+            scheduled_at: row.scheduled_at,
+            due_at: row.scheduled_at, // For compatibility with existing components
+            due_date: row.scheduled_at ? new Date(row.scheduled_at).toISOString().split('T')[0] : null,
+            completed_at: row.completed_at,
+            cancelled: row.cancelled_at,
+            failure_reason: row.failure_reason,
+            original_instruction: row.original_instruction,
+            created_at: row.task_created_at,
+            instance_created_at: row.instance_created_at,
+            // Recurrence info
+            repeat_is_true: !!row.frequency,
+            recurrence: row.frequency ? {
+                frequency: row.frequency,
+                interval_value: row.interval_value,
+                occurrences_per_period: row.occurrences_per_period,
+                days_of_week: row.days_of_week,
+                week_of_month: row.week_of_month,
+                day_of_month: row.day_of_month,
+                preferred_time: row.preferred_time,
+                time_range_start: row.time_range_start,
+                time_range_end: row.time_range_end,
+                end_date: row.end_date,
+                end_after_occurrences: row.end_after_occurrences
+            } : null
+        }));
+
+        res.json(taskInstances);
 
     } catch (err) {
-        console.log("Error fetching tasks:", err.message);
-        res.status(500).json({ error: "Failed to fetch tasks" })
+        console.log("Error fetching task instances:", err.message);
+        res.status(500).json({ error: "Failed to fetch task instances" });
     }
-})
+});
 
 
 
 router.patch("/:id", authenticateToken, async (req, res) => {
-    console.log("MORE TESTSS")
     const userId = req.user.userId;
-    const taskId = req.params.id;
+    const instanceId = req.params.id;
     const { completed_at, cancelled, failure_reason } = req.body;
 
+    const client = await pool.connect();
+
     try {
-        const result = await pool.query(
-            `UPDATE tasks
-            SET completed_at = $1,
-                cancelled = $2,
-                failure_reason = $3
-            where id = $4 AND user_id = $5
-            RETURNING *`,
-            [completed_at, cancelled, failure_reason, taskId, userId]
+        await client.query('BEGIN');
+
+        // First verify the task instance belongs to the user and get task info
+        const verifyResult = await client.query(
+            `SELECT ti.*, t.id as task_id, r.frequency, r.interval_value, r.occurrences_per_period, 
+                    r.days_of_week, r.week_of_month, r.day_of_month, r.preferred_time, 
+                    r.time_range_start, r.time_range_end, r.end_date, r.end_after_occurrences
+             FROM task_instances ti
+             JOIN tasks t ON ti.task_id = t.id
+             LEFT JOIN recurrence_rules r ON t.id = r.task_id
+             WHERE ti.id = $1 AND t.user_id = $2`,
+            [instanceId, userId]
         );
 
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: "Task not found" });
+        if (verifyResult.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: "Task instance not found" });
         }
+
+        const taskInstance = verifyResult.rows[0];
+
+        // Update the task instance
+        const result = await client.query(
+            `UPDATE task_instances
+            SET completed_at = $1,
+                cancelled_at = $2,
+                failure_reason = $3
+            WHERE id = $4
+            RETURNING *`,
+            [completed_at, cancelled, failure_reason, instanceId]
+        );
+
+        // If this is a recurring task and it was completed, generate the next instance
+        if (taskInstance.frequency && completed_at && !cancelled) {
+            const recurrence = {
+                frequency: taskInstance.frequency,
+                interval_value: taskInstance.interval_value,
+                occurrences_per_period: taskInstance.occurrences_per_period,
+                days_of_week: taskInstance.days_of_week,
+                week_of_month: taskInstance.week_of_month,
+                day_of_month: taskInstance.day_of_month,
+                preferred_time: taskInstance.preferred_time,
+                time_range_start: taskInstance.time_range_start,
+                time_range_end: taskInstance.time_range_end,
+                end_date: taskInstance.end_date,
+                end_after_occurrences: taskInstance.end_after_occurrences
+            };
+
+            // Import the function from aiService
+            const { generateNextTaskInstance } = require('../services/aiService');
+            const nextInstanceTime = await generateNextTaskInstance(taskInstance.task_id, recurrence, client);
+            console.log(`Generated next instance for task ${taskInstance.task_id} at ${nextInstanceTime}`);
+        }
+
+        await client.query('COMMIT');
         res.json(result.rows[0]);
 
     } catch (err) {
-        console.error("Error updating task:", err.message);
-        res.status(500).json({ error: "Failed to update task"});
+        await client.query('ROLLBACK');
+        console.error("Error updating task instance:", err.message);
+        res.status(500).json({ error: "Failed to update task instance"});
+    } finally {
+        client.release();
     }
-})
+});
+
+// Get recurrence rules for calendar display (doesn't create instances)
+router.get("/recurrence-rules", authenticateToken, async (req, res) => {
+    const userId = req.user.userId;
+    
+    try {
+        const result = await pool.query(
+            `SELECT 
+                t.id as task_id,
+                t.title,
+                t.category_id,
+                c.name as category_name,
+                r.frequency,
+                r.interval_value,
+                r.occurrences_per_period,
+                r.days_of_week,
+                r.week_of_month,
+                r.day_of_month,
+                r.preferred_time,
+                r.time_range_start,
+                r.time_range_end,
+                r.end_date,
+                r.end_after_occurrences
+            FROM tasks t
+            LEFT JOIN categories c ON t.category_id = c.id
+            LEFT JOIN recurrence_rules r ON t.id = r.task_id
+            WHERE t.user_id = $1 AND r.id IS NOT NULL
+            ORDER BY t.created_at DESC`,
+            [userId]
+        );
+
+        res.json(result.rows);
+
+    } catch (err) {
+        console.log("Error fetching recurrence rules:", err.message);
+        res.status(500).json({ error: "Failed to fetch recurrence rules" });
+    }
+});
 
 module.exports = router;

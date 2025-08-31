@@ -214,8 +214,9 @@ export const TaskProvider = ({ children }) => {
 
   const todaysTasks = useMemo(() => 
     incompleteTasks.filter(task => {
+      if (!task.scheduled_at) return false;
       const today = new Date();
-      const taskDate = new Date(task.start_date);
+      const taskDate = new Date(task.scheduled_at);
       return taskDate.toDateString() === today.toDateString();
     }), 
     [incompleteTasks]
@@ -231,6 +232,11 @@ export const TaskProvider = ({ children }) => {
     fetchCategories();
     fetchTasks();
   }, [fetchCategories, fetchTasks]);
+
+  // Function to refresh tasks after AI generation
+  const refreshTasksAfterAI = useCallback(async () => {
+    await fetchTasks();
+  }, [fetchTasks]);
 
   const value = {
     // State
@@ -252,7 +258,8 @@ export const TaskProvider = ({ children }) => {
     failTask,
     createTask,
     updateTask,
-    getCategoryName
+    getCategoryName,
+    refreshTasksAfterAI
   };
 
   return (

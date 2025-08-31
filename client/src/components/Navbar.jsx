@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useState, useEffect } from 'react';
 import Modal from './Modal.jsx';
 import Button from "./Button.jsx";
@@ -15,6 +15,7 @@ export default function Navbar() {
   const [categories, setCategories] = useState([]);
   const { user, logout } = useAuth();
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const location = useLocation();
   const currentPath = location.pathname; 
@@ -110,7 +111,17 @@ const handleDeleteCateg = async (id) => {
           <ul className="flex flex-col space-y-2 text-md mt-12">
             <li className="">
               <Link to="/" className={getLinkStyle("/")}>
+                Home
+              </Link>
+            </li>
+            <li className="">
+              <Link to="/today" className={getLinkStyle("/today")}>
                 Today
+              </Link>
+            </li>
+            <li className="">
+              <Link to="/calendar" className={getLinkStyle("/calendar")}>
+                Calendar
               </Link>
             </li>
 

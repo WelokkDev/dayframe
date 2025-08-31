@@ -1,153 +1,126 @@
 const express = require('express');
 const router = express.Router();
+const { parseAndCreateTasks, generateNextTaskInstance } = require('../services/aiService');
+const authenticateToken = require('../middleware/authMiddleware');
 const pool = require('../db');
-const { parseTaskFromText } = require('../services/aiService');
-const authMiddleware = require('../middleware/authMiddleware');
 
 // Apply auth middleware to all routes
-router.use(authMiddleware);
+router.use(authenticateToken);
 
-// POST /ai/parse-task - Parse natural language into task structure
-router.post('/parse-task', async (req, res) => {
+// POST /ai/generate-tasks - Generate and create tasks from natural language
+router.post('/generate-tasks', async (req, res) => {
   try {
     const { text } = req.body;
-    const userId = req.user.id;
+    const userId = req.user.userId; // Note: using req.user.userId based on your auth middleware
 
     if (!text || typeof text !== 'string') {
       return res.status(400).json({ error: 'Text input is required' });
     }
 
-    // Parse the natural language input
-    const parsedTask = await parseTaskFromText(text, userId);
+    // Parse and create tasks in one operation
+    const result = await parseAndCreateTasks(userId, text);
 
-    // If a category was mentioned, try to find or create it
-    let categoryId = null;
-    if (parsedTask.category) {
-      // First try to find existing category
-      const categoryResult = await pool.query(
-        'SELECT id FROM categories WHERE name ILIKE $1 AND user_id = $2',
-        [parsedTask.category, userId]
-      );
-
-      if (categoryResult.rows.length > 0) {
-        categoryId = categoryResult.rows[0].id;
-      } else {
-        // Create new category if it doesn't exist
-        const newCategoryResult = await pool.query(
-          'INSERT INTO categories (name, user_id) VALUES ($1, $2) RETURNING id',
-          [parsedTask.category, userId]
-        );
-        categoryId = newCategoryResult.rows[0].id;
-      }
-    }
-
-    // Combine due date and time if both are provided
-    let dueAt = null;
-    if (parsedTask.dueDate) {
-      if (parsedTask.dueTime) {
-        dueAt = `${parsedTask.dueDate} ${parsedTask.dueTime}:00`;
-      } else {
-        dueAt = `${parsedTask.dueDate} 00:00:00`;
-      }
-    }
-
-    // Return the parsed task data for frontend confirmation
     res.json({
       success: true,
-      task: {
-        title: parsedTask.title,
-        description: parsedTask.description,
-        categoryId: categoryId,
-        dueAt: dueAt,
-        priority: parsedTask.priority,
-        recurrence: parsedTask.recurrence,
-        originalInstruction: parsedTask.originalInstruction
-      }
+      tasks: result.tasks,
+      interpretation: result.interpretation,
+      originalInstruction: result.originalInstruction
     });
 
   } catch (error) {
-    console.error('AI parse task error:', error);
+    console.error('AI generate tasks error:', error);
+    
+    // Handle specific error types
+    if (error.message.includes('Please provide more specific details')) {
+      return res.status(400).json({ 
+        error: error.message,
+        type: 'clarification_needed'
+      });
+    }
+    
     res.status(500).json({ 
-      error: 'Failed to parse task',
+      error: 'Failed to generate tasks',
       details: error.message 
     });
   }
 });
 
-// POST /ai/create-task - Create task from parsed data
-router.post('/create-task', async (req, res) => {
+// POST /ai/test-recurrence - Test the recurrence algorithm
+router.post('/test-recurrence', async (req, res) => {
   try {
-    const userId = req.user.id;
-    const { 
-      title, 
-      description, 
-      categoryId, 
-      dueAt, 
-      priority, 
-      recurrence, 
-      originalInstruction 
-    } = req.body;
+    const { recurrence } = req.body;
+    const userId = req.user.userId;
 
-    // Validate required fields
-    if (!title) {
-      return res.status(400).json({ error: 'Task title is required' });
+    if (!recurrence || !recurrence.frequency) {
+      return res.status(400).json({ error: 'Recurrence data is required' });
     }
 
-    // Start a transaction
     const client = await pool.connect();
     
     try {
       await client.query('BEGIN');
-
-      // Insert the task
+      
+      // Create a test task
       const taskResult = await client.query(
-        `INSERT INTO tasks (user_id, title, description, category_id, due_at, original_instruction) 
-         VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-        [userId, title, description, categoryId, dueAt, originalInstruction]
+        `INSERT INTO tasks (user_id, title, category_id, original_instruction) 
+        VALUES ($1, $2, $3, $4) RETURNING *`,
+        [userId, 'Test Task', null, 'Test recurrence algorithm']
       );
-
-      const taskId = taskResult.rows[0].id;
-
-      // Insert recurrence rules if specified
-      if (recurrence && recurrence.frequency) {
-        await client.query(
-          `INSERT INTO recurrence_rules (
-            task_id, frequency, interval_value, days_of_week, week_of_month, 
-            day_of_month, preferred_time, end_date, end_after_occurrences
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-          [
-            taskId,
-            recurrence.frequency,
-            recurrence.intervalValue || 1,
-            recurrence.daysOfWeek ? `{${recurrence.daysOfWeek.join(',')}}` : null,
-            recurrence.weekOfMonth,
-            recurrence.dayOfMonth,
-            recurrence.preferredTime,
-            recurrence.endDate,
-            recurrence.endAfterOccurrences
-          ]
-        );
-      }
-
+      
+      const task = taskResult.rows[0];
+      
+      // Create recurrence rule
+      const recurrenceResult = await client.query(
+        `INSERT INTO recurrence_rules (
+          task_id, frequency, interval_value, occurrences_per_period, days_of_week, week_of_month, 
+          day_of_month, preferred_time, time_range_start, time_range_end, end_date, end_after_occurrences
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
+        [
+          task.id,
+          recurrence.frequency,
+          recurrence.interval_value || 1,
+          recurrence.occurrences_per_period || null,
+          recurrence.days_of_week ? `{${recurrence.days_of_week.join(',')}}` : null,
+          recurrence.week_of_month || null,
+          recurrence.day_of_month || null,
+          recurrence.preferred_time || null,
+          recurrence.time_range_start || null,
+          recurrence.time_range_end || null,
+          recurrence.end_date || null,
+          recurrence.end_after_occurrences || null
+        ]
+      );
+      
+      // Test the algorithm
+      const nextInstanceTime = await generateNextTaskInstance(task.id, recurrence, client);
+      
+      // Get the created instance
+      const instanceResult = await client.query(
+        `SELECT * FROM task_instances WHERE task_id = $1 ORDER BY scheduled_at`,
+        [task.id]
+      );
+      
       await client.query('COMMIT');
-
+      
       res.json({
         success: true,
-        taskId: taskId,
-        message: 'Task created successfully'
+        task: task,
+        recurrence: recurrenceResult.rows[0],
+        nextInstanceTime: nextInstanceTime,
+        instances: instanceResult.rows
       });
-
-    } catch (error) {
+      
+    } catch (err) {
       await client.query('ROLLBACK');
-      throw error;
+      throw err;
     } finally {
       client.release();
     }
 
   } catch (error) {
-    console.error('AI create task error:', error);
+    console.error('Test recurrence error:', error);
     res.status(500).json({ 
-      error: 'Failed to create task',
+      error: 'Failed to test recurrence',
       details: error.message 
     });
   }

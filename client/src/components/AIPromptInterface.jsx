@@ -4,8 +4,7 @@ import Task from "./Task";
 import { fetchWithAuth } from "../utils/fetchWithAuth";
 import { useTasks } from "../context/TaskProvider";
 
-export default function Home() {
-
+export default function AIPromptInterface() {
   const [prompt, setPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { refreshTasksAfterAI, incompleteTasks } = useTasks();
@@ -40,6 +39,7 @@ export default function Home() {
       setIsLoading(false);
     }
   };
+
   return (
     <div className="h-full w-full p-12 flex justify-center">
       <div className="flex flex-col items-center w-full max-w-4xl">
@@ -48,7 +48,7 @@ export default function Home() {
         </h1>
         
         <div className="w-full space-y-6">
-         
+          {/* Prompt Input */}
           <div className="space-y-4">
             <label className="block text-[var(--background)] text-lg font-medium">
               Describe what you need to do:
@@ -70,7 +70,7 @@ export default function Home() {
             </Button>
           </div>
 
-          
+          {/* Loading State */}
           {isLoading && (
             <div className="flex flex-col items-center space-y-4 py-8">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--accent)]"></div>
@@ -80,7 +80,7 @@ export default function Home() {
             </div>
           )}
 
-          
+          {/* Upcoming Tasks */}
           <div className="space-y-4">
             <h2 className="text-2xl text-[var(--background)] font-semibold">
               Upcoming Tasks
@@ -102,6 +102,5 @@ export default function Home() {
         </div>
       </div>
     </div>
-
-  )
+  );
 }
