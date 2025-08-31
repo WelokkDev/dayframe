@@ -9,6 +9,7 @@ import Welcome from "./pages/Welcome.jsx";
 import Completed from "./pages/Completed.jsx"
 import Failed from "./pages/Failed.jsx"
 import Calendar from "./pages/Calendar.jsx";
+import AIPrompt from "./pages/AIPrompt.jsx";
 import './App.css'
 
 
@@ -21,6 +22,7 @@ export default function AppRoutes() {
 
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
+        <Route path="/ai-prompt" element={<AIPrompt />} />
         <Route path="/today" element={<Today />} />
         <Route path="/calendar" element={<Calendar />} />
         <Route path="/failed" element={<Failed />} />

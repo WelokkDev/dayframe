@@ -8,8 +8,14 @@ const openai = new OpenAI({
 
 // Helper function to parse natural language into structured task data
 async function parseTaskFromText(userInput, userId) {
+  // Get current date for context
+  const today = new Date();
+  const currentDate = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+  
   const prompt = `
 You are a task parsing assistant. Parse the following natural language input into a structured task format.
+
+CURRENT DATE: ${currentDate}
 
 Input: "${userInput}"
 
@@ -17,6 +23,15 @@ IMPORTANT RULES:
 1. If the input is ambiguous or unclear (e.g., "help me", "I need to do stuff"), respond with an error asking for clarification
 2. The title should be the actual action (e.g., "Buy Groceries", "Write Essay", "Call Mom")
 3. Support these specific patterns:
+
+ONE-TIME TASKS WITH DUE DATES:
+   - "Buy groceries tomorrow" → due_at: calculated tomorrow date, no recurrence
+   - "Submit report by Friday 5pm" → due_at: calculated next Friday date, preferred_time: "17:00", no recurrence
+   - "Finish my essay by 8pm on Monday" → due_at: calculated next Monday date, preferred_time: "20:00", no recurrence
+   - "Go to work tomorrow" → due_at: calculated tomorrow date, no recurrence
+   - "Buy eggs tomorrow" → due_at: calculated tomorrow date, no recurrence
+
+RECURRING TASKS:
    - "Every month pay rent" → frequency: "monthly", interval_value: 1, day_of_month: 1
    - "Every three weeks visit parents" → frequency: "weekly", interval_value: 3
    - "Every two days call parents" → frequency: "daily", interval_value: 2
@@ -24,15 +39,27 @@ IMPORTANT RULES:
    - "Every Monday do laundry" → frequency: "weekly", interval_value: 1, days_of_week: [1]
    - "Drink coffee at 6am on weekdays" → frequency: "weekly", interval_value: 1, days_of_week: [1,2,3,4,5], preferred_time: "06:00"
 
+DATE CALCULATION RULES:
+- Calculate dates relative to today (${currentDate})
+- "tomorrow" = next day after ${currentDate}
+- "Monday" = next Monday after ${currentDate}
+- "Friday" = next Friday after ${currentDate}
+- "next week" = 7 days from ${currentDate}
+- Always ensure calculated dates are in the future
+- NEVER use past dates, IF you feel compelled to, ask the user for clarification
+- For one-time tasks: set due_at to the calculated date, do NOT set recurrence fields
+- For recurring tasks: do NOT set due_at, use recurrence fields instead
+- When time is not specified along with date, set the time to 11:59pm of that date
+
 Return a JSON object with the following structure:
 {
   "tasks": [
     {
       "title": "Clear, concise task title (the actual action)",
       "category": "category name (if mentioned, otherwise null)",
-      "due_at": "YYYY-MM-DD or null if not specified",
+      "due_at": "YYYY-MM-DD for one-time tasks with specific due dates, or null for recurring tasks",
       "recurrence": {
-        "frequency": "daily/weekly/monthly or null",
+        "frequency": "daily/weekly/monthly for recurring tasks, or null for one-time tasks",
         "interval_value": "number (default 1) or null",
         "occurrences_per_period": "number for 'X times per period' or null",
         "days_of_week": "[1,2,3,4,5,6,7] for days (1=Monday, 7=Sunday) or null",
@@ -48,6 +75,8 @@ Return a JSON object with the following structure:
   ],
   "interpretation": "Brief summary of what tasks were created"
 }
+
+IMPORTANT: For one-time tasks, set due_at and leave recurrence.frequency as null. For recurring tasks, set recurrence.frequency and leave due_at as null.
 
 If the input is ambiguous, return:
 {
@@ -90,6 +119,19 @@ Parse the input and return only the JSON object:`;
     
     if (!parsedData.tasks || !Array.isArray(parsedData.tasks)) {
       throw new Error('AI response must contain a tasks array');
+    }
+
+    // Validate that due dates are not in the past
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Start of today
+    
+    for (const task of parsedData.tasks) {
+      if (task.due_at) {
+        const dueDate = new Date(task.due_at);
+        if (dueDate < today) {
+          throw new Error(`Invalid due date: ${task.due_at} is in the past. Please specify a future date.`);
+        }
+      }
     }
 
     const cleanedTasks = parsedData.tasks.map(task => ({
@@ -335,6 +377,8 @@ async function createTask(userId, taskData, client) {
   );
 
   const task = taskResult.rows[0];
+  console.log(`Created task ${task.id}: "${taskData.title}"`);
+  console.log(`Task data:`, { due_at: taskData.due_at, recurrence: taskData.recurrence });
 
   // Create recurrence rule if specified
   let recurrenceRuleId = null;
@@ -360,19 +404,23 @@ async function createTask(userId, taskData, client) {
        ]
     );
     recurrenceRuleId = recurrenceResult.rows[0].id;
+    console.log(`Created recurrence rule ${recurrenceRuleId} for task ${task.id}`);
   }
 
   // Generate task instances based on recurrence or single due date
   if (taskData.due_at) {
-    // Single task instance
+    // Single task instance with specific due date
     const scheduledAt = taskData.recurrence?.preferred_time 
       ? `${taskData.due_at} ${taskData.recurrence.preferred_time}:00`
       : `${taskData.due_at} 00:00:00`;
 
+    console.log(`Creating single task instance for task ${task.id} at ${scheduledAt}`);
+    
     await client.query(
       `INSERT INTO task_instances (task_id, scheduled_at) VALUES ($1, $2)`,
       [task.id, scheduledAt]
     );
+    console.log(`Created single task instance for task ${task.id}`);
   } else if (recurrenceRuleId) {
     // Generate only the next instance for recurring tasks
     console.log(`Generating first instance for recurring task ${task.id} with recurrence:`, taskData.recurrence);

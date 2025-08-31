@@ -7,43 +7,25 @@ import { ClockIcon, InfoCircledIcon } from "@radix-ui/react-icons"
 
 const Task = ({ task }) => {
     const { completeTask, failTask } = useTasks();
-    const checkmarkStyles = `fill-[var(--accent)] rounded-xl  border border-[var(--accent)] w-12 hover:bg-[#332929]`;
-    const checkmarkStylesTwo = `fill-[var(--accent)] rounded-xl border-5 border border-[var(--accent)] w-12 hover:bg-[var(--accent)] hover:fill-[var(--background)] `;
-    
     const [isFailureModalOpen, setIsFailureModalOpen] = useState(false);
     const [isRepeatModalOpen, setIsRepeatModalOpen] = useState(false);
-
-    const iconWrapperStyles = `
-    w-8 h-8 
-    rounded-xl 
-    border-3 border-[var(--accent)] 
-    bg-transparent 
-    hover:bg-[var(--accent)] 
-    flex items-center justify-center 
-    transition-colors
-    `;
-
-    const checkStyles = `
-    w-10 h-10 
-    fill-[var(--accent)] 
-    hover:fill-[var(--background)] 
-    transition-colors
-    `;
-    const cancelStyles = `
-    w-4 h-4 
-    fill-[var(--accent)] 
-    hover:fill-[var(--background)] 
-    transition-colors
-    `;
+    const [isCompleting, setIsCompleting] = useState(false);
 
     const formattedDate = task.scheduled_at ? format(new Date(task.scheduled_at), "MMM d") : "No due date";
 
     const handleComplete = async () => {
-        const success = await completeTask(task.id);
-        if (success) {
-            console.log("Task completed successfully!");
-        } else {
-            console.error("Failed to complete task");
+        if (isCompleting) return;
+        setIsCompleting(true);
+        
+        try {
+            const success = await completeTask(task.id);
+            if (success) {
+                console.log("Task completed successfully!");
+            } else {
+                console.error("Failed to complete task");
+            }
+        } finally {
+            setIsCompleting(false);
         }
     }
 
@@ -58,36 +40,72 @@ const Task = ({ task }) => {
     }
 
     return (
-        <div className="bg-[var(--background)] text-[var(--foreground)] w-full p-4 rounded-xl flex items-center justify-between">
-            <div className="flex gap-x-2 items-center">
-                <div className={iconWrapperStyles} onClick={handleComplete}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className={checkStyles} viewBox="0 0 16 16">
-                        <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z"/>
-                    </svg>
-                </div>
-                <div className="flex flex-col justify-left ml-4">
-                    <div className="flex gap-x-2">
-                        <ClockIcon/>
-                        <p className="text-xs text-stone-200">{formattedDate}</p>
+        <div className="group bg-[#4A3C3C] border border-[#8B7355] rounded-xl p-4 hover:shadow-md transition-all duration-200">
+            <div className="flex items-center space-x-4">
+                {/* Checkbox */}
+                <button
+                    onClick={handleComplete}
+                    disabled={isCompleting}
+                    className={`flex-shrink-0 w-6 h-6 rounded-lg border-2 transition-all duration-200 ${
+                        isCompleting 
+                            ? 'border-[#FFD97D] bg-[#FFD97D]' 
+                            : 'border-[#8B7355] hover:border-[#FFD97D] hover:bg-[#3B2F2F]'
+                    }`}
+                >
+                    {isCompleting && (
+                        <div className="w-full h-full flex items-center justify-center">
+                            <div className="w-3 h-3 border-2 border-[#3B2F2F] border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                    )}
+                </button>
+
+                {/* Task Content */}
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-3 mb-1">
+                        <div className="flex items-center space-x-1 text-[#C4A484]">
+                            <ClockIcon className="w-4 h-4" />
+                            <span className="text-sm font-medium">{formattedDate}</span>
+                        </div>
+                        {task.repeat_is_true && (
+                            <div className="flex items-center space-x-1">
+                                <div className="w-1.5 h-1.5 bg-[#FFD97D] rounded-full"></div>
+                                <span className="text-xs text-[#FFD97D] font-medium">Repeats</span>
+                            </div>
+                        )}
                     </div>
-                    <p className="text-md">{task.title}</p>
+                    
+                    <h3 className="text-[#FDF6EC] font-medium text-lg leading-tight">
+                        {task.title}
+                    </h3>
+                    
                     {task.original_instruction && (
-                        <p className="text-xs text-stone-400 mt-1">{task.original_instruction}</p>
+                        <p className="text-sm text-[#C4A484] mt-1 line-clamp-2">
+                            {task.original_instruction}
+                        </p>
                     )}
                 </div>
-            </div>
-            <div className="flex gap-x-2 justify-end">
-                {task.repeat_is_true && (
-                    <div className="flex items-center">
-                        <p className="text-[var(--accent)] text-xs leading-none w-1/2">This task repeats</p>
-                        <InfoCircledIcon className="w-6 h-6 hover:bg-stone-600" onClick={() => setIsRepeatModalOpen(true)}/>
-                    </div>
-                )}
 
-                <div className={iconWrapperStyles} onClick={() => setIsFailureModalOpen(true)}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className={cancelStyles} viewBox="0 0 16 16">
-                        <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
-                    </svg>
+                {/* Actions */}
+                <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    {task.repeat_is_true && (
+                        <button
+                            onClick={() => setIsRepeatModalOpen(true)}
+                            className="p-2 text-[#8B7355] hover:text-[#FFD97D] hover:bg-[#3B2F2F] rounded-lg transition-colors duration-200"
+                            title="View recurrence details"
+                        >
+                            <InfoCircledIcon className="w-5 h-5" />
+                        </button>
+                    )}
+
+                    <button
+                        onClick={() => setIsFailureModalOpen(true)}
+                        className="p-2 text-[#8B7355] hover:text-[#D5A8A8] hover:bg-[#4A2D2D] rounded-lg transition-colors duration-200"
+                        title="Mark as failed"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
                 </div>
             </div>
                 
