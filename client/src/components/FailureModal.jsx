@@ -10,7 +10,7 @@ const FailureModal = ({ isOpen, onClose, handleFailureSubmit }) => {
 
   const [failureReason, setFailureReason] = useState("")
   
-  const base = "relative z-10 w-[90vw] max-w-2xl bg-[var(--foreground)] rounded-xl text-[var(--text-dark)] shadow-xl p-16"
+  const base = "relative z-10 w-[90vw] max-w-2xl bg-[#4A3C3C] border border-[#8B7355] rounded-xl shadow-xl p-8"
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -37,8 +37,12 @@ const FailureModal = ({ isOpen, onClose, handleFailureSubmit }) => {
         className={`${base} space-y-4 `}
         onClick={(e) => e.stopPropagation()}
       >
+        <div className="border-b border-[#8B7355] pb-4">
+          <h2 className="text-2xl font-semibold text-[#FDF6EC]">Mark Task as Failed</h2>
+          <p className="text-[#C4A484] mt-1">Please provide a reason for why this task couldn't be completed</p>
+        </div>
         <TextField value={failureReason} onChange={(e) => setFailureReason(e.target.value)}>Why did you fail?</TextField>
-        <p>*This is required to remove a task</p>
+        <p className="text-[#C4A484] text-sm">*This is required to remove a task</p>
         <div className='flex justify-between'>
           <Button variant="cancel_red" size="xl" onClick={handleCancel}>Cancel</Button>
           <Button variant="primary" size="xl"  onClick={handleSubmit}>Submit</Button>

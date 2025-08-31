@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { useTasks } from "../context/TaskProvider";
 import { format } from "date-fns";
 import FailureModal from "./FailureModal";
-import RepeatModal from "./RepeatModal";
+import TaskInfo from "./TaskInfo";
 import { ClockIcon, InfoCircledIcon } from "@radix-ui/react-icons"
 
 const Task = ({ task }) => {
     const { completeTask, failTask } = useTasks();
     const [isFailureModalOpen, setIsFailureModalOpen] = useState(false);
-    const [isRepeatModalOpen, setIsRepeatModalOpen] = useState(false);
+    const [isTaskInfoOpen, setIsTaskInfoOpen] = useState(false);
     const [isCompleting, setIsCompleting] = useState(false);
 
     const formattedDate = task.scheduled_at ? format(new Date(task.scheduled_at), "MMM d") : "No due date";
@@ -89,9 +89,9 @@ const Task = ({ task }) => {
                 <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                     {task.repeat_is_true && (
                         <button
-                            onClick={() => setIsRepeatModalOpen(true)}
+                            onClick={() => setIsTaskInfoOpen(true)}
                             className="p-2 text-[#8B7355] hover:text-[#FFD97D] hover:bg-[#3B2F2F] rounded-lg transition-colors duration-200"
-                            title="View recurrence details"
+                            title="View task information"
                         >
                             <InfoCircledIcon className="w-5 h-5" />
                         </button>
@@ -114,9 +114,9 @@ const Task = ({ task }) => {
                 handleFailureSubmit={handleFailureSubmit} 
                 onClose={() => setIsFailureModalOpen(false)}
             />
-            <RepeatModal 
-                isOpen={isRepeatModalOpen} 
-                onClose={() => setIsRepeatModalOpen(false)} 
+            <TaskInfo 
+                isOpen={isTaskInfoOpen} 
+                onClose={() => setIsTaskInfoOpen(false)} 
                 task={task} 
             /> 
         </div>
