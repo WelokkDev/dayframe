@@ -45,6 +45,49 @@ router.post('/generate-tasks', async (req, res) => {
   }
 });
 
+// POST /ai/create-confirmed-task - Create a task that was confirmed by the user
+router.post('/create-confirmed-task', async (req, res) => {
+  try {
+    const { taskData, originalInstruction } = req.body;
+    const userId = req.user.userId;
+
+    if (!taskData || !taskData.title) {
+      return res.status(400).json({ error: 'Task data is required' });
+    }
+
+    // Create the confirmed task using the existing createTask function
+    const { createTask } = require('../services/aiService');
+    const client = await pool.connect();
+    
+    try {
+      await client.query('BEGIN');
+      
+      const task = await createTask(userId, taskData, client);
+      
+      await client.query('COMMIT');
+      
+      res.json({
+        success: true,
+        task: task,
+        message: 'Task created successfully'
+      });
+      
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
+
+  } catch (error) {
+    console.error('Create confirmed task error:', error);
+    res.status(500).json({ 
+      error: 'Failed to create confirmed task',
+      details: error.message 
+    });
+  }
+});
+
 // POST /ai/test-recurrence - Test the recurrence algorithm
 router.post('/test-recurrence', async (req, res) => {
   try {

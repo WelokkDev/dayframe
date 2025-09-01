@@ -441,29 +441,13 @@ async function parseAndCreateTasks(userId, userInput) {
 
   const parsedData = await parseTaskFromText(userInput.trim(), userId);
 
-  const client = await pool.connect();
-  const createdTasks = [];
-
-  try {
-    await client.query('BEGIN');
-
-    for (const taskData of parsedData.tasks) {
-      const task = await createTask(userId, taskData, client);
-      createdTasks.push(task);
-    }
-
-    await client.query('COMMIT');
-    return {
-      success: true,
-      tasks: createdTasks,
-      interpretation: parsedData.interpretation,
-      originalInstruction: parsedData.originalInstruction
-    }
-  } catch (error) {
-    await client.query('ROLLBACK')
-    throw error;
-  } finally {
-    client.release();
+  // For now, just return the parsed tasks without creating them
+  // The frontend will handle confirmation and creation
+  return {
+    success: true,
+    tasks: parsedData.tasks,
+    interpretation: parsedData.interpretation,
+    originalInstruction: parsedData.originalInstruction
   }
 }
 
