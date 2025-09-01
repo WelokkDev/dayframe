@@ -1,5 +1,7 @@
 import { useTasks } from "../context/TaskProvider";
 import Task from "./Task";
+import CompletedTask from "./CompletedTask";
+import FailedTask from "./FailedTask";
 
 const TaskList = ({ 
   title = "Your Tasks", 
@@ -7,12 +9,17 @@ const TaskList = ({
   emptyMessage = "No tasks yet",
   emptySubMessage = "Use the AI generator to create your first task!",
   showCount = true,
-  maxHeight = "max-h-96"
+  maxHeight = "max-h-96",
+  taskType = "incomplete" // "incomplete", "completed", or "failed"
 }) => {
   const { incompleteTasks, completedTasks, failedTasks } = useTasks();
   
   // Use provided tasks or default to incomplete tasks
   const displayTasks = tasks || incompleteTasks;
+  
+  // Choose the appropriate task component based on type
+  const TaskComponent = taskType === "completed" ? CompletedTask : 
+                       taskType === "failed" ? FailedTask : Task;
   
   return (
     <div className="bg-[#4A3C3C] border border-[#8B7355] rounded-2xl shadow-lg p-8">
@@ -44,7 +51,7 @@ const TaskList = ({
       ) : (
         <div className={`space-y-3 ${maxHeight} overflow-y-auto`}>
           {displayTasks.map((task) => (
-            <Task key={task.id} task={task} />
+            <TaskComponent key={task.id} task={task} />
           ))}
         </div>
       )}

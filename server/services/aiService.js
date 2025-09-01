@@ -49,7 +49,9 @@ DATE CALCULATION RULES:
 - NEVER use past dates, IF you feel compelled to, ask the user for clarification
 - For one-time tasks: set due_at to the calculated date, do NOT set recurrence fields
 - For recurring tasks: do NOT set due_at, use recurrence fields instead
-- When time is not specified along with date, set the time to 11:59pm of that date
+- For one-time tasks with specific times: set due_at to YYYY-MM-DD and preferred_time to HH:MM
+- For one-time tasks without specific times: set due_at to YYYY-MM-DD and preferred_time to 11:59:99
+
 
 Return a JSON object with the following structure:
 {
@@ -103,6 +105,7 @@ Parse the input and return only the JSON object:`;
     });
 
     const response = completion.choices[0].message.content;
+    console.log('AI response:', response);
     
     // Extract JSON from response (in case there's extra text)
     const jsonMatch = response.match(/\{[\s\S]*\}/);

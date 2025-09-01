@@ -1,16 +1,31 @@
-import React from "react";
-import { useTasks } from "../context/TaskProvider";
-import { ClockIcon } from "@radix-ui/react-icons"
-import { format } from "date-fns";
+import React, { useEffect, useState } from "react";
+import TaskList from "../components/TaskList";
+import { fetchWithAuth } from "../utils/fetchWithAuth";
 
 const Completed = () => {
-    const currentPath = location.pathname; 
-    const getLinkStyle = (path) => {
-        return `block px-4 py-2 rounded-xl transition w-full text-left transition-all duration-200 
-    ${currentPath === path ? "bg-[var(--accent)] text-[var(--background)] font-semibold" : "text-[var(--text-light)] hover:bg-[#302727] hover:text-[var(--accent)]"}`
-    } 
-    
-    const { completedTasks, loading } = useTasks();
+    const [completedTasks, setCompletedTasks] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchCompletedTasks = async () => {
+            try {
+                setLoading(true);
+                const res = await fetchWithAuth("http://localhost:3000/tasks?status=completed");
+                if (res.ok) {
+                    const data = await res.json();
+                    setCompletedTasks(data);
+                } else {
+                    console.error("Failed to fetch completed tasks");
+                }
+            } catch (error) {
+                console.error("Error fetching completed tasks:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchCompletedTasks();
+    }, []);
 
     if (loading) {
         return (
@@ -24,30 +39,17 @@ const Completed = () => {
 
     return (
         <div className="h-full w-full p-12 flex justify-center">
-            {completedTasks.length === 0 ? (
-                <div className="text-[var(--background)] w-full h-full flex flex-col justify-center items-center space-y-4">
-                    <h1 className="text-4xl">You have yet to complete any tasks!</h1>
-                </div>
-            ) : (
-                <div className="flex flex-col items-center w-full">
-                    <h1 className="text-4xl text-left text-[var(--background)]">Completed Tasks</h1>
-                    <div className="space-y-2 mt-8 w-full max-w-[600px]">
-                        {completedTasks.map((task) => (
-                            <div key={task.id} className="bg-[var(--background)] text-[var(--foreground)] p-4 rounded-xl flex items-center justify-between w-full">
-                                <div className="flex gap-x-2 items-center w-full">
-                                    <div className="flex flex-col justify-left ml-2 ">
-                                        <div className="flex gap-x-2">
-                                            <ClockIcon/>
-                                            <p className="text-xs text-[var(--accent)]">Completed at {format(new Date(task.completed_at), "MMM d")}</p>
-                                        </div>
-                                        <p className="text-md">{task.title}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+            <div className="w-full max-w-4xl">
+                <TaskList
+                    title="Completed Tasks"
+                    tasks={completedTasks}
+                    emptyMessage="You have yet to complete any tasks!"
+                    emptySubMessage="Complete some tasks to see them here"
+                    showCount={true}
+                    maxHeight="max-h-[calc(100vh-200px)]"
+                    taskType="completed"
+                />
+            </div>
         </div>
     );
 };
