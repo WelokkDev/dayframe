@@ -27,7 +27,8 @@ IMPORTANT RULES:
 ONE-TIME TASKS WITH DUE DATES:
    - "Buy groceries tomorrow" → due_at: calculated tomorrow date, no recurrence
    - "Submit report by Friday 5pm" → due_at: calculated next Friday date, preferred_time: "17:00", no recurrence
-   - "Finish my essay by 8pm on Monday" → due_at: calculated next Monday date, preferred_time: "20:00", no recurrence
+- "Finish my essay by 8pm on Monday" → due_at: calculated next Monday date, preferred_time: "20:00", no recurrence
+- "Buy groceries tomorrow" → due_at: calculated tomorrow date, preferred_time: "11:59", no recurrence
    - "Go to work tomorrow" → due_at: calculated tomorrow date, no recurrence
    - "Buy eggs tomorrow" → due_at: calculated tomorrow date, no recurrence
 
@@ -50,7 +51,7 @@ DATE CALCULATION RULES:
 - For one-time tasks: set due_at to the calculated date, do NOT set recurrence fields
 - For recurring tasks: do NOT set due_at, use recurrence fields instead
 - For one-time tasks with specific times: set due_at to YYYY-MM-DD and preferred_time to HH:MM
-- For one-time tasks without specific times: set due_at to YYYY-MM-DD and preferred_time to 11:59:99
+- For one-time tasks without specific times: set due_at to YYYY-MM-DD and preferred_time to 11:59
 
 
 Return a JSON object with the following structure:
@@ -67,7 +68,7 @@ Return a JSON object with the following structure:
         "days_of_week": "[1,2,3,4,5,6,7] for days (1=Monday, 7=Sunday) or null",
         "week_of_month": "1-4 for week position, -1 for last, or null",
         "day_of_month": "1-31 for day of month or null",
-        "preferred_time": "HH:MM or null",
+                 "preferred_time": "HH:MM format (e.g., '09:00', '17:30') or null",
         "time_range_start": "HH:MM or null",
         "time_range_end": "HH:MM or null",
         "end_date": "YYYY-MM-DD or null",
@@ -187,8 +188,8 @@ async function generateNextTaskInstance(taskId, recurrence, client) {
   // Handle "N times per period" case (e.g., "go to gym 4 times a week")
   console.log(`Checking occurrences_per_period: ${recurrence.occurrences_per_period}, type: ${typeof recurrence.occurrences_per_period}`);
   if (recurrence.occurrences_per_period && recurrence.occurrences_per_period > 1) {
-    console.log(`Generating ${recurrence.occurrences_per_period} instances for this period`);
-    return await generateMultipleInstancesForPeriod(taskId, recurrence, client);
+    console.log(`Generating counter instance with ${recurrence.occurrences_per_period} actions for this period`);
+    return await generateCounterInstance(taskId, recurrence, client);
   }
   
   // Original logic for single instance generation
@@ -230,9 +231,28 @@ async function generateNextTaskInstance(taskId, recurrence, client) {
     }
     
     if (shouldCreateInstance) {
-      const scheduledAt = recurrence.preferred_time 
-        ? `${currentDate.toISOString().split('T')[0]} ${recurrence.preferred_time}:00`
-        : `${currentDate.toISOString().split('T')[0]} 00:00:00`;
+      let scheduledAt;
+      
+      if (recurrence.preferred_time) {
+        // Validate the time format (HH:MM or HH:MM:SS)
+        const timeMatch = recurrence.preferred_time.match(/^([0-9]{1,2}):([0-9]{2})(?::([0-9]{2}))?$/);
+        if (!timeMatch) {
+          throw new Error(`Invalid time format: ${recurrence.preferred_time}. Expected HH:MM or HH:MM:SS format.`);
+        }
+        
+        const hours = parseInt(timeMatch[1]);
+        const minutes = parseInt(timeMatch[2]);
+        
+        if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+          throw new Error(`Invalid time: ${recurrence.preferred_time}. Hours must be 0-23, minutes must be 0-59.`);
+        }
+        
+        // If time already has seconds, use it as is; otherwise append :00
+        const timeWithSeconds = timeMatch[3] ? recurrence.preferred_time : `${recurrence.preferred_time}:00`;
+        scheduledAt = `${currentDate.toISOString().split('T')[0]} ${timeWithSeconds}`;
+      } else {
+        scheduledAt = `${currentDate.toISOString().split('T')[0]} 00:00:00`;
+      }
       
       // Check if this instance already exists
       const existingInstance = await client.query(
@@ -281,12 +301,11 @@ async function generateNextTaskInstance(taskId, recurrence, client) {
   return null;
 }
 
-// Helper function to generate multiple instances for "N times per period"
-async function generateMultipleInstancesForPeriod(taskId, recurrence, client) {
+// Helper function to generate counter instances for "N times per period"
+async function generateCounterInstance(taskId, recurrence, client) {
   const now = new Date();
-  const instances = [];
   
-  console.log(`generateMultipleInstancesForPeriod called with occurrences_per_period: ${recurrence.occurrences_per_period}`);
+  console.log(`generateCounterInstance called with occurrences_per_period: ${recurrence.occurrences_per_period}`);
   
   // Calculate the end of the current period
   let periodEnd;
@@ -308,46 +327,37 @@ async function generateMultipleInstancesForPeriod(taskId, recurrence, client) {
       periodEnd.setHours(23, 59, 59, 999);
       break;
     default:
-      throw new Error(`Unsupported frequency for multiple instances: ${recurrence.frequency}`);
+      throw new Error(`Unsupported frequency for counter instances: ${recurrence.frequency}`);
   }
   
   console.log(`Period end: ${periodEnd.toISOString()}`);
   
-  // Generate N instances, all due at the end of the period
-  console.log(`Starting loop to create ${recurrence.occurrences_per_period} instances`);
-  for (let i = 0; i < recurrence.occurrences_per_period; i++) {
-    console.log(`Loop iteration ${i + 1}/${recurrence.occurrences_per_period}`);
-    
-    // Add a small offset to each instance to make them unique
-    const instanceTime = new Date(periodEnd);
-    instanceTime.setSeconds(instanceTime.getSeconds() + i); // Add i seconds to make each unique
-    
-    const scheduledAt = instanceTime.toISOString().replace('T', ' ').replace('Z', '');
-    console.log(`Generated scheduledAt: ${scheduledAt}`);
-    
-    // Check if this instance already exists
-    const existingInstance = await client.query(
-      `SELECT id FROM task_instances WHERE task_id = $1 AND scheduled_at = $2`,
-      [taskId, scheduledAt]
-    );
-    
-    console.log(`Existing instances found: ${existingInstance.rows.length}`);
-    
-    if (existingInstance.rows.length === 0) {
-      // Create the instance
-      await client.query(
-        `INSERT INTO task_instances (task_id, scheduled_at) VALUES ($1, $2)`,
-        [taskId, scheduledAt]
-      );
-      instances.push(scheduledAt);
-      console.log(`Created instance ${i + 1}/${recurrence.occurrences_per_period} for task ${taskId} at ${scheduledAt}`);
-    } else {
-      console.log(`Instance ${i + 1} already exists for ${scheduledAt}`);
-    }
+  // Check if a counter instance already exists for this period
+  const existingCounter = await client.query(
+    `SELECT id FROM counter_instances 
+     WHERE task_id = $1 
+     AND DATE(scheduled_at) = DATE($2)
+     AND completed_at IS NULL 
+     AND cancelled_at = FALSE`,
+    [taskId, periodEnd]
+  );
+  
+  if (existingCounter.rows.length > 0) {
+    console.log(`Counter instance already exists for this period: ${periodEnd.toISOString()}`);
+    return periodEnd.toISOString();
   }
   
-  console.log(`Generated ${instances.length} instances for task ${taskId}`);
-  return instances.length > 0 ? instances[0] : null; // Return the first instance time for compatibility
+  // Create a single counter instance instead of multiple task instances
+  const scheduledAt = periodEnd.toISOString().replace('T', ' ').replace('Z', '');
+  
+  await client.query(
+    `INSERT INTO counter_instances (task_id, actions_left, scheduled_at) 
+     VALUES ($1, $2, $3)`,
+    [taskId, recurrence.occurrences_per_period, scheduledAt]
+  );
+  
+  console.log(`Created counter instance for task ${taskId} with ${recurrence.occurrences_per_period} actions due by ${scheduledAt}`);
+  return scheduledAt;
 }
 
 async function createTask(userId, taskData, client) {
@@ -413,9 +423,28 @@ async function createTask(userId, taskData, client) {
   // Generate task instances based on recurrence or single due date
   if (taskData.due_at) {
     // Single task instance with specific due date
-    const scheduledAt = taskData.recurrence?.preferred_time 
-      ? `${taskData.due_at} ${taskData.recurrence.preferred_time}:00`
-      : `${taskData.due_at} 00:00:00`;
+    let scheduledAt;
+    
+    if (taskData.recurrence?.preferred_time) {
+      // Validate the time format (HH:MM or HH:MM:SS)
+      const timeMatch = taskData.recurrence.preferred_time.match(/^([0-9]{1,2}):([0-9]{2})(?::([0-9]{2}))?$/);
+      if (!timeMatch) {
+        throw new Error(`Invalid time format: ${taskData.recurrence.preferred_time}. Expected HH:MM or HH:MM:SS format.`);
+      }
+      
+      const hours = parseInt(timeMatch[1]);
+      const minutes = parseInt(timeMatch[2]);
+      
+      if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+        throw new Error(`Invalid time: ${taskData.recurrence.preferred_time}. Hours must be 0-23, minutes must be 0-59.`);
+      }
+      
+      // If time already has seconds, use it as is; otherwise append :00
+      const timeWithSeconds = timeMatch[3] ? taskData.recurrence.preferred_time : `${taskData.recurrence.preferred_time}:00`;
+      scheduledAt = `${taskData.due_at} ${timeWithSeconds}`;
+    } else {
+      scheduledAt = `${taskData.due_at} 00:00:00`;
+    }
 
     console.log(`Creating single task instance for task ${task.id} at ${scheduledAt}`);
     
@@ -463,5 +492,6 @@ module.exports = {
   parseTaskFromText,
   parseAndCreateTasks,
   createTask,
-  generateNextTaskInstance
+  generateNextTaskInstance,
+  generateCounterInstance
 };
