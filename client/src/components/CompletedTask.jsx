@@ -1,9 +1,10 @@
 import { format } from "date-fns";
 import { ClockIcon } from "@radix-ui/react-icons";
+import { formatTaskDateTime } from "../utils/dateTimeUtils";
 
 const CompletedTask = ({ task }) => {
     const completedDate = task.completed_at ? format(new Date(task.completed_at), "MMM d, yyyy 'at' h:mm a") : "Unknown";
-    const scheduledDate = task.scheduled_at ? format(new Date(task.scheduled_at), "MMM d") : "No due date";
+    const scheduledDateTime = formatTaskDateTime(task.scheduled_at, task.recurrence?.preferred_time);
 
     return (
         <div className="group bg-[#3B2F2F] border border-[#6B5B5B] rounded-xl p-4 transition-all duration-200">
@@ -20,7 +21,7 @@ const CompletedTask = ({ task }) => {
                     <div className="flex items-center space-x-3 mb-1">
                         <div className="flex items-center space-x-1 text-[#9CA3AF]">
                             <ClockIcon className="w-4 h-4" />
-                            <span className="text-sm font-medium">Due: {scheduledDate}</span>
+                            <span className="text-sm font-medium">Due: {scheduledDateTime}</span>
                         </div>
                         {task.repeat_is_true && (
                             <div className="flex items-center space-x-1">

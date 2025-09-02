@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useTasks } from "../context/TaskProvider";
 import FailureModal from "./FailureModal";
-import { FileIcon } from "@radix-ui/react-icons"
+import { FileIcon, ClockIcon } from "@radix-ui/react-icons"
+import { formatTaskDateTime } from "../utils/dateTimeUtils";
 
 export default function HomeTask({ task }) {
   const { completeTask, failTask, getCategoryName } = useTasks();
@@ -61,11 +62,19 @@ export default function HomeTask({ task }) {
           </svg>
         </div>
         <div className="flex flex-col justify-left ml-4">
-          <div className="flex gap-x-2">
+          <div className="flex gap-x-2 items-center mb-1">
             <FileIcon/>
             <p className="text-xs text-[var(--accent)]">Category: {getCategoryName(task.category_id)}</p>
           </div>
           <p className="text-md">{task.title}</p>
+          {task.scheduled_at && (
+            <div className="flex items-center space-x-1 text-[var(--accent)] mt-1">
+              <ClockIcon className="w-3 h-3" />
+              <span className="text-xs font-medium">
+                {formatTaskDateTime(task.scheduled_at, task.recurrence?.preferred_time)}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 

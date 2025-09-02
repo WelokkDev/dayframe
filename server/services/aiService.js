@@ -197,8 +197,20 @@ async function generateNextTaskInstance(taskId, recurrence, client) {
   let attempts = 0;
   const maxAttempts = 365; // Prevent infinite loops
   
+  // If we're starting from today, check if we should skip to tomorrow
+  // This prevents creating instances that would immediately fail
+  if (recurrence.preferred_time) {
+    const todayTime = new Date(`${currentDate.toISOString().split('T')[0]} ${recurrence.preferred_time}:00`);
+    if (todayTime <= now) {
+      console.log(`Today's time ${recurrence.preferred_time} has already passed, starting from tomorrow`);
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+  }
+  
   while (attempts < maxAttempts) {
     let shouldCreateInstance = false;
+    
+    console.log(`Checking date: ${currentDate.toDateString()}`);
     
     switch (recurrence.frequency) {
       case 'daily':
@@ -250,26 +262,43 @@ async function generateNextTaskInstance(taskId, recurrence, client) {
         // If time already has seconds, use it as is; otherwise append :00
         const timeWithSeconds = timeMatch[3] ? recurrence.preferred_time : `${recurrence.preferred_time}:00`;
         scheduledAt = `${currentDate.toISOString().split('T')[0]} ${timeWithSeconds}`;
+        
+        // Check if this time has already passed today
+        if (currentDate.toDateString() === now.toDateString()) {
+          const scheduledTime = new Date(scheduledAt);
+          if (scheduledTime <= now) {
+            console.log(`Time ${scheduledAt} has already passed today, moving to next date`);
+            shouldCreateInstance = false;
+          }
+        }
       } else {
         scheduledAt = `${currentDate.toISOString().split('T')[0]} 00:00:00`;
+        
+        // For tasks without specific time, if it's today and past midnight, skip today
+        if (currentDate.toDateString() === now.toDateString() && now.getHours() > 0) {
+          console.log(`Today has already started, moving to next date`);
+          shouldCreateInstance = false;
+        }
       }
       
-      // Check if this instance already exists
-      const existingInstance = await client.query(
-        `SELECT id FROM task_instances WHERE task_id = $1 AND scheduled_at = $2`,
-        [taskId, scheduledAt]
-      );
-      
-      if (existingInstance.rows.length === 0) {
-        // Create the next instance
-        await client.query(
-          `INSERT INTO task_instances (task_id, scheduled_at) VALUES ($1, $2)`,
+      if (shouldCreateInstance) {
+        // Check if this instance already exists
+        const existingInstance = await client.query(
+          `SELECT id FROM task_instances WHERE task_id = $1 AND scheduled_at = $2`,
           [taskId, scheduledAt]
         );
-        console.log(`Created task instance for task ${taskId} at ${scheduledAt}`);
-        return scheduledAt;
-      } else {
-        console.log(`Instance already exists for ${scheduledAt}, moving to next date`);
+        
+        if (existingInstance.rows.length === 0) {
+          // Create the next instance
+          await client.query(
+            `INSERT INTO task_instances (task_id, scheduled_at) VALUES ($1, $2)`,
+            [taskId, scheduledAt]
+          );
+          console.log(`Created task instance for task ${taskId} at ${scheduledAt}`);
+          return scheduledAt;
+        } else {
+          console.log(`Instance already exists for ${scheduledAt}, moving to next date`);
+        }
       }
     }
     
@@ -277,19 +306,39 @@ async function generateNextTaskInstance(taskId, recurrence, client) {
     switch (recurrence.frequency) {
       case 'daily':
         currentDate.setDate(currentDate.getDate() + (recurrence.interval_value || 1));
+        console.log(`Daily: moved to ${currentDate.toDateString()}`);
         break;
       case 'weekly':
         if (recurrence.days_of_week && recurrence.days_of_week.length > 0) {
-          // For specific days, check each day until we find the next valid day
-          currentDate.setDate(currentDate.getDate() + 1);
+          // For specific days, find the next valid day of week
+          let nextValidDay = null;
+          for (let i = 1; i <= 7; i++) {
+            const testDate = new Date(currentDate);
+            testDate.setDate(testDate.getDate() + i);
+            const testDayOfWeek = testDate.getDay() === 0 ? 7 : testDate.getDay();
+            if (recurrence.days_of_week.includes(testDayOfWeek)) {
+              nextValidDay = testDate;
+              break;
+            }
+          }
+          if (nextValidDay) {
+            currentDate = nextValidDay;
+            console.log(`Weekly: found next valid day: ${currentDate.toDateString()}`);
+          } else {
+            // Fallback: just move to next day
+            currentDate.setDate(currentDate.getDate() + 1);
+            console.log(`Weekly: fallback to next day: ${currentDate.toDateString()}`);
+          }
         } else {
           // For weekly without specific days, jump by interval weeks
           currentDate.setDate(currentDate.getDate() + 7 * (recurrence.interval_value || 1));
+          console.log(`Weekly: jumped by ${recurrence.interval_value || 1} weeks to ${currentDate.toDateString()}`);
         }
         break;
       case 'monthly':
         // Move to next month
         currentDate.setMonth(currentDate.getMonth() + (recurrence.interval_value || 1));
+        console.log(`Monthly: moved to ${currentDate.toDateString()}`);
         break;
     }
     

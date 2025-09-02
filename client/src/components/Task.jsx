@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTasks } from "../context/TaskProvider";
-import { format } from "date-fns";
+import { formatTaskDateTime } from "../utils/dateTimeUtils";
 import FailureModal from "./FailureModal";
 import TaskInfo from "./TaskInfo";
 import { ClockIcon, InfoCircledIcon } from "@radix-ui/react-icons"
@@ -11,7 +11,10 @@ const Task = ({ task }) => {
     const [isTaskInfoOpen, setIsTaskInfoOpen] = useState(false);
     const [isCompleting, setIsCompleting] = useState(false);
 
-    const formattedDate = task.scheduled_at ? format(new Date(task.scheduled_at), "MMM d") : "No due date";
+    const formattedDateTime = formatTaskDateTime(
+        task.scheduled_at, 
+        task.recurrence?.preferred_time
+    );
 
     const handleComplete = async () => {
         if (isCompleting) return;
@@ -64,7 +67,7 @@ const Task = ({ task }) => {
                     <div className="flex items-center space-x-3 mb-1">
                         <div className="flex items-center space-x-1 text-[#C4A484]">
                             <ClockIcon className="w-4 h-4" />
-                            <span className="text-sm font-medium">{formattedDate}</span>
+                            <span className="text-sm font-medium">{formattedDateTime}</span>
                         </div>
                         {task.repeat_is_true && (
                             <div className="flex items-center space-x-1">
