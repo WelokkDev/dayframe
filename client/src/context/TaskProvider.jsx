@@ -44,6 +44,7 @@ export const TaskProvider = ({ children }) => {
       if (filters.status) params.append("status", filters.status);
       if (filters.dueToday) params.append("dueToday", "true");
       if (filters.categoryId) params.append("categoryId", filters.categoryId);
+      if (filters.date) params.append("date", filters.date);
       
       if (params.toString()) {
         url += `?${params.toString()}`;
@@ -58,6 +59,29 @@ export const TaskProvider = ({ children }) => {
       }
     } catch (err) {
       console.error("Tasks server error:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Fetch tasks for a specific date
+  const fetchTasksByDate = useCallback(async (date) => {
+    try {
+      setLoading(true);
+      const formattedDate = format(date, 'yyyy-MM-dd');
+      const url = `http://localhost:3000/tasks?date=${formattedDate}`;
+
+      const res = await fetchWithAuth(url);
+      const data = await res.json();
+      if (res.ok) {
+        return data;
+      } else {
+        console.error("Tasks fetch error:", data.error);
+        return [];
+      }
+    } catch (err) {
+      console.error("Tasks server error:", err);
+      return [];
     } finally {
       setLoading(false);
     }
@@ -253,6 +277,7 @@ export const TaskProvider = ({ children }) => {
     
     // Actions
     fetchTasks,
+    fetchTasksByDate,
     fetchCategories,
     completeTask,
     failTask,
