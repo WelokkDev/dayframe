@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { fetchWithAuth } from "../utils/fetchWithAuth";
 import { format } from "date-fns";
+import DeadlineModal from "../components/DeadlineModal";
 
 const TaskContext = createContext();
 
@@ -11,6 +12,12 @@ export const TaskProvider = ({ children }) => {
   const [categories, setCategories] = useState({});
   const [loading, setLoading] = useState(true);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
+  
+  // Deadline modal state
+  const [deadlineModal, setDeadlineModal] = useState({
+    isOpen: false,
+    task: null
+  });
 
   // Fetch categories
   const fetchCategories = useCallback(async () => {
@@ -262,6 +269,68 @@ export const TaskProvider = ({ children }) => {
     await fetchTasks();
   }, [fetchTasks]);
 
+  // Check for missed deadlines and show modal if needed
+  const checkMissedDeadlines = useCallback(() => {
+    const now = new Date();
+    const missedTasks = incompleteTasks.filter(task => {
+      if (!task.scheduled_at) return false;
+      const deadline = new Date(task.scheduled_at);
+      return deadline < now && !task.completed_at && !task.cancelled;
+    });
+
+    if (missedTasks.length > 0) {
+      // Find the most recently missed task
+      const mostRecentMissed = missedTasks.sort((a, b) => 
+        new Date(b.scheduled_at) - new Date(a.scheduled_at)
+      )[0];
+
+      // Only show modal for important tasks or if no modal is currently open
+      if (mostRecentMissed.importance && !deadlineModal.isOpen) {
+        setDeadlineModal({
+          isOpen: true,
+          task: mostRecentMissed
+        });
+      }
+    }
+  }, [incompleteTasks, deadlineModal.isOpen]);
+
+  // Handle deadline modal actions
+  const handleDeadlineComplete = useCallback(async () => {
+    if (!deadlineModal.task) return;
+    
+    const success = await completeTask(deadlineModal.task.id);
+    if (success) {
+      // Check for more missed deadlines
+      setTimeout(checkMissedDeadlines, 1000);
+    }
+  }, [deadlineModal.task, completeTask, checkMissedDeadlines]);
+
+  const handleDeadlineFail = useCallback(async (reason) => {
+    if (!deadlineModal.task) return;
+    
+    const success = await failTask(deadlineModal.task.id, reason);
+    if (success) {
+      // Check for more missed deadlines
+      setTimeout(checkMissedDeadlines, 1000);
+    }
+  }, [deadlineModal.task, failTask, checkMissedDeadlines]);
+
+  const closeDeadlineModal = useCallback(() => {
+    setDeadlineModal({ isOpen: false, task: null });
+  }, []);
+
+  // Check for missed deadlines periodically
+  useEffect(() => {
+    const interval = setInterval(checkMissedDeadlines, 30000); // Check every 30 seconds
+    
+    return () => clearInterval(interval);
+  }, [checkMissedDeadlines]);
+
+  // Check for missed deadlines when tasks change
+  useEffect(() => {
+    checkMissedDeadlines();
+  }, [tasks, checkMissedDeadlines]);
+
   const value = {
     // State
     tasks,
@@ -290,6 +359,15 @@ export const TaskProvider = ({ children }) => {
   return (
     <TaskContext.Provider value={value}>
       {children}
+      
+      {/* Deadline Modal */}
+      <DeadlineModal
+        isOpen={deadlineModal.isOpen}
+        onClose={closeDeadlineModal}
+        task={deadlineModal.task}
+        onComplete={handleDeadlineComplete}
+        onFail={handleDeadlineFail}
+      />
     </TaskContext.Provider>
   );
 };

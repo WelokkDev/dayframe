@@ -50,14 +50,8 @@ router.get("/", authenticateToken, async (req, res) => {
     const date = req.query.date; // For calendar view
     
     try {
-        // 1. Auto-cancel any overdue task instances
-        await pool.query(
-            `
-                UPDATE task_instances
-                SET cancelled_at = TRUE, failure_reason = COALESCE(failure_reason, 'Missed deadline')
-                WHERE completed_at IS NULL AND cancelled_at = FALSE AND scheduled_at < CURRENT_TIMESTAMP
-            `
-        );
+        // Note: Auto-fail logic has been removed in favor of user accountability popups
+        // The frontend will now handle missed deadlines with importance-based modals
 
         // 2. Build main query to return task instances with task and recurrence info
         let baseQuery = `
@@ -71,6 +65,7 @@ router.get("/", authenticateToken, async (req, res) => {
                 t.id as task_id,
                 t.title,
                 t.category_id,
+                t.importance,
                 t.original_instruction,
                 t.created_at as task_created_at,
                 c.name as category_name,
@@ -127,6 +122,7 @@ router.get("/", authenticateToken, async (req, res) => {
             title: row.title,
             category_id: row.category_id,
             category_name: row.category_name,
+            importance: row.importance,
             scheduled_at: row.scheduled_at,
             due_at: row.scheduled_at, // For compatibility with existing components
             due_date: row.scheduled_at ? new Date(row.scheduled_at).toISOString().split('T')[0] : null,

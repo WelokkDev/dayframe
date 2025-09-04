@@ -64,18 +64,18 @@ const Task = ({ task }) => {
 
                 {/* Task Content */}
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-3 mb-1">
-                        <div className="flex items-center space-x-1 text-[#C4A484]">
-                            <ClockIcon className="w-4 h-4" />
-                            <span className="text-sm font-medium">{formattedDateTime}</span>
-                        </div>
-                        {task.repeat_is_true && (
-                            <div className="flex items-center space-x-1">
-                                <div className="w-1.5 h-1.5 bg-[#FFD97D] rounded-full"></div>
-                                <span className="text-xs text-[#FFD97D] font-medium">Repeats</span>
+                                            <div className="flex items-center space-x-3 mb-1">
+                            <div className="flex items-center space-x-1 text-[#C4A484]">
+                                <ClockIcon className="w-4 h-4" />
+                                <span className="text-sm font-medium">{formattedDateTime}</span>
                             </div>
-                        )}
-                    </div>
+                            {task.repeat_is_true && (
+                                <div className="flex items-center space-x-1">
+                                    <div className="w-1.5 h-1.5 bg-[#FFD97D] rounded-full"></div>
+                                    <span className="text-xs text-[#FFD97D] font-medium">Repeats</span>
+                                </div>
+                            )}
+                        </div>
                     
                     <h3 className="text-[#FDF6EC] font-medium text-lg leading-tight">
                         {task.title}

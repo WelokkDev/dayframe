@@ -55,29 +55,34 @@ router.post('/create-confirmed-task', async (req, res) => {
       return res.status(400).json({ error: 'Task data is required' });
     }
 
-    // Create the confirmed task using the existing createTask function
-    const { createTask } = require('../services/aiService');
-    const client = await pool.connect();
-    
-    try {
-      await client.query('BEGIN');
+          // Create the confirmed task using the existing createTask function
+      const { createTask } = require('../services/aiService');
+      const client = await pool.connect();
       
-      const task = await createTask(userId, taskData, client);
-      
-      await client.query('COMMIT');
-      
-      res.json({
-        success: true,
-        task: task,
-        message: 'Task created successfully'
-      });
-      
-    } catch (err) {
-      await client.query('ROLLBACK');
-      throw err;
-    } finally {
-      client.release();
-    }
+      try {
+        await client.query('BEGIN');
+        
+        // Ensure importance is set (default to true if not provided)
+        if (taskData.importance === undefined) {
+          taskData.importance = true;
+        }
+        
+        const task = await createTask(userId, taskData, client);
+        
+        await client.query('COMMIT');
+        
+        res.json({
+          success: true,
+          task: task,
+          message: 'Task created successfully'
+        });
+        
+      } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+      } finally {
+        client.release();
+      }
 
   } catch (error) {
     console.error('Create confirmed task error:', error);
@@ -105,9 +110,9 @@ router.post('/test-recurrence', async (req, res) => {
       
       // Create a test task
       const taskResult = await client.query(
-        `INSERT INTO tasks (user_id, title, category_id, original_instruction) 
-        VALUES ($1, $2, $3, $4) RETURNING *`,
-        [userId, 'Test Task', null, 'Test recurrence algorithm']
+        `INSERT INTO tasks (user_id, title, category_id, importance, original_instruction) 
+        VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+        [userId, 'Test Task', null, true, 'Test recurrence algorithm']
       );
       
       const task = taskResult.rows[0];

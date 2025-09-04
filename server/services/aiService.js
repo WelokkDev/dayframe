@@ -22,23 +22,26 @@ Input: "${userInput}"
 IMPORTANT RULES:
 1. If the input is ambiguous or unclear (e.g., "help me", "I need to do stuff"), respond with an error asking for clarification
 2. The title should be the actual action (e.g., "Buy Groceries", "Write Essay", "Call Mom")
-3. Support these specific patterns:
+3. Classify each task as important or unimportant for personal accountability:
+   - IMPORTANT = health, work, study, long-term growth, serious commitments
+   - UNIMPORTANT = small errands, leisure activities, optional tasks, minor conveniences
+4. Support these specific patterns:
 
 ONE-TIME TASKS WITH DUE DATES:
-   - "Buy groceries tomorrow" → due_at: calculated tomorrow date, no recurrence
-   - "Submit report by Friday 5pm" → due_at: calculated next Friday date, preferred_time: "17:00", no recurrence
-- "Finish my essay by 8pm on Monday" → due_at: calculated next Monday date, preferred_time: "20:00", no recurrence
-- "Buy groceries tomorrow" → due_at: calculated tomorrow date, preferred_time: "11:59", no recurrence
-   - "Go to work tomorrow" → due_at: calculated tomorrow date, no recurrence
-   - "Buy eggs tomorrow" → due_at: calculated tomorrow date, no recurrence
+   - "Buy groceries tomorrow" → due_at: calculated tomorrow date, no recurrence, importance: false
+   - "Submit report by Friday 5pm" → due_at: calculated next Friday date, preferred_time: "17:00", no recurrence, importance: true
+- "Finish my essay by 8pm on Monday" → due_at: calculated next Monday date, preferred_time: "20:00", no recurrence, importance: true
+- "Buy groceries tomorrow" → due_at: calculated tomorrow date, preferred_time: "11:59", no recurrence, importance: false
+   - "Go to work tomorrow" → due_at: calculated tomorrow date, no recurrence, importance: true
+   - "Buy eggs tomorrow" → due_at: calculated tomorrow date, no recurrence, importance: false
 
 RECURRING TASKS:
-   - "Every month pay rent" → frequency: "monthly", interval_value: 1, day_of_month: 1
-   - "Every three weeks visit parents" → frequency: "weekly", interval_value: 3
-   - "Every two days call parents" → frequency: "daily", interval_value: 2
-   - "Go to gym 4 times a week" → frequency: "weekly", interval_value: 1, occurrences_per_period: 4
-   - "Every Monday do laundry" → frequency: "weekly", interval_value: 1, days_of_week: [1]
-   - "Drink coffee at 6am on weekdays" → frequency: "weekly", interval_value: 1, days_of_week: [1,2,3,4,5], preferred_time: "06:00"
+   - "Every month pay rent" → frequency: "monthly", interval_value: 1, day_of_month: 1, importance: true
+   - "Every three weeks visit parents" → frequency: "weekly", interval_value: 3, importance: true
+   - "Every two days call parents" → frequency: "daily", interval_value: 2, importance: true
+   - "Go to gym 4 times a week" → frequency: "weekly", interval_value: 1, occurrences_per_period: 4, importance: true
+   - "Every Monday do laundry" → frequency: "weekly", interval_value: 1, days_of_week: [1], importance: false
+   - "Drink coffee at 6am on weekdays" → frequency: "weekly", interval_value: 1, days_of_week: [1,2,3,4,5], preferred_time: "06:00", importance: false
 
 DATE CALCULATION RULES:
 - Calculate dates relative to today (${currentDate})
@@ -53,13 +56,13 @@ DATE CALCULATION RULES:
 - For one-time tasks with specific times: set due_at to YYYY-MM-DD and preferred_time to HH:MM
 - For one-time tasks without specific times: set due_at to YYYY-MM-DD and preferred_time to 11:59
 
-
 Return a JSON object with the following structure:
 {
   "tasks": [
     {
       "title": "Clear, concise task title (the actual action)",
       "category": "category name (if mentioned, otherwise null)",
+      "importance": true/false,
       "due_at": "YYYY-MM-DD for one-time tasks with specific due dates, or null for recurring tasks",
       "recurrence": {
         "frequency": "daily/weekly/monthly for recurring tasks, or null for one-time tasks",
@@ -141,6 +144,7 @@ Parse the input and return only the JSON object:`;
     const cleanedTasks = parsedData.tasks.map(task => ({
       title: task.title || 'Untitled Task',
       category: task.category || null,
+      importance: task.importance !== undefined ? task.importance : true, // Default to important if not specified
       due_at: task.due_at || null,
       recurrence: {
         frequency: task.recurrence?.frequency || null,
@@ -433,9 +437,9 @@ async function createTask(userId, taskData, client) {
 
   // Create the task
   const taskResult = await client.query(
-    `INSERT INTO tasks (user_id, title, category_id, original_instruction) 
-    VALUES ($1, $2, $3, $4) RETURNING *`,
-    [userId, taskData.title, categoryId, taskData.original_instruction]
+    `INSERT INTO tasks (user_id, title, category_id, importance, original_instruction) 
+    VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+    [userId, taskData.title, categoryId, taskData.importance, taskData.original_instruction]
   );
 
   const task = taskResult.rows[0];
