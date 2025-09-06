@@ -237,6 +237,9 @@ export default function AIPrompt() {
                           Repeats: {task.recurrence.frequency}
                           {task.recurrence.interval_value > 1 && ` every ${task.recurrence.interval_value} ${task.recurrence.frequency}`}
                           {task.recurrence.days_of_week && ` on ${task.recurrence.days_of_week.map(day => ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][day - 1]).join(', ')}`}
+                          {task.recurrence.end_date && (
+                            <span className="text-[#FFD97D]"> • Ends {new Date(task.recurrence.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                          )}
                         </p>
                       )}
                       {task.original_instruction && (
@@ -248,7 +251,7 @@ export default function AIPrompt() {
                     <div className="flex gap-2 ml-4">
                       <button
                         onClick={() => handleConfirmTask(index)}
-                        className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition-all duration-200 transform hover:scale-110 hover:shadow-lg"
+                        className="p-2 bg-[#2D4A2D] text-[#A8D5A8] border border-[#4A7C4A] rounded-full hover:bg-[#4A7C4A] hover:text-[#D5F5D5] transition-all duration-200 transform hover:scale-110 hover:shadow-lg"
                         title="Confirm this task"
                       >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -257,7 +260,7 @@ export default function AIPrompt() {
                       </button>
                       <button
                         onClick={() => handleRejectTask(index)}
-                        className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all duration-200 transform hover:scale-110 hover:shadow-lg"
+                        className="p-2 bg-[#4A2D2D] text-[#D5A8A8] border border-[#7C4A4A] rounded-full hover:bg-[#7C4A4A] hover:text-[#F5D5D5] transition-all duration-200 transform hover:scale-110 hover:shadow-lg"
                         title="Reject this task"
                       >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">

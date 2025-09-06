@@ -21,7 +21,7 @@ Input: "${userInput}"
 
 IMPORTANT RULES:
 1. If the input is ambiguous or unclear (e.g., "help me", "I need to do stuff"), respond with an error asking for clarification
-2. The title should be the actual action (e.g., "Buy Groceries", "Write Essay", "Call Mom")
+2. The title should be the core action only, without frequency or timing information (e.g., "Buy Groceries", "Write Essay", "Call Mom", "Read", "Exercise"). Frequency and timing details are handled by recurrence rules, not the title.
 3. Classify each task as important or unimportant for personal accountability:
    - IMPORTANT = health, work, study, long-term growth, serious commitments
    - UNIMPORTANT = small errands, leisure activities, optional tasks, minor conveniences

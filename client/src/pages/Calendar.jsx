@@ -4,18 +4,60 @@ import { ChevronLeftIcon, ChevronRightIcon, CalendarIcon } from "@radix-ui/react
 import { useTasks } from "../context/TaskProvider";
 import TaskList from "../components/TaskList";
 import Modal from "../components/Modal";
+import { generateAllTaskInstancesForRange } from "../utils/recurrenceUtils";
 
 const Calendar = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [dailyTasks, setDailyTasks] = useState({});
   const { tasks, fetchTasks, fetchTasksByDate } = useTasks();
 
   // Fetch tasks when component mounts
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks]);
+
+
+  // Memoized function to get all tasks (actual + generated) for the current month
+  const getAllTasksForMonth = useMemo(() => {
+    if (!tasks || tasks.length === 0) return [];
+    
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(currentMonth);
+    const today = startOfDay(new Date());
+    
+    // Only get tasks for current and future dates, not past dates
+    const actualTasks = tasks.filter(task => {
+      if (!task.scheduled_at) return false;
+      const taskDate = new Date(task.scheduled_at);
+      return taskDate >= monthStart && taskDate <= monthEnd && taskDate >= today;
+    });
+    
+    // Get unique recurring tasks (not instances) that need additional instances generated
+    const recurringTasks = tasks
+      .filter(task => task.recurrence && task.recurrence.frequency)
+      .reduce((unique, task) => {
+        // Use task_id as the key to avoid duplicates
+        if (!unique.find(t => t.id === task.task_id)) {
+          unique.push({
+            id: task.task_id, // Use the original task ID
+            title: task.title,
+            importance: task.importance,
+            category_id: task.category_id,
+            original_instruction: task.original_instruction,
+            recurrence: task.recurrence
+          });
+        }
+        return unique;
+      }, []);
+    
+    // Generate additional instances for recurring tasks that don't have instances in this month
+    // Only generate for current and future dates
+    const generatedInstances = generateAllTaskInstancesForRange(recurringTasks, today, monthEnd, actualTasks);
+    
+    // Combine actual task instances and generated instances
+    return [...actualTasks, ...generatedInstances];
+  }, [tasks, currentMonth]);
 
   // Generate calendar days
   const days = useMemo(() => {
@@ -25,21 +67,11 @@ const Calendar = () => {
     });
   }, [currentMonth]);
 
-  // Get tasks for a specific date
+  // Get tasks for a specific date (simple and efficient)
   const getTasksForDate = (date) => {
-    const dateKey = format(date, 'yyyy-MM-dd');
-    
-    // Return cached tasks if available
-    if (dailyTasks[dateKey]) {
-      return dailyTasks[dateKey];
-    }
-    
-    // Fallback to filtering from all tasks
-    if (!tasks || tasks.length === 0) return [];
-    
     const targetDate = startOfDay(date);
-    return tasks.filter(task => {
-      if (!task.scheduled_at) return false;
+    
+    return getAllTasksForMonth.filter(task => {
       const taskDate = startOfDay(new Date(task.scheduled_at));
       return isSameDay(taskDate, targetDate);
     });
@@ -64,19 +96,9 @@ const Calendar = () => {
     });
   };
 
-  const handleDateClick = async (date) => {
+  const handleDateClick = (date) => {
     setSelectedDate(date);
     setIsModalOpen(true);
-    
-    // Fetch tasks for this specific date
-    const dateKey = format(date, 'yyyy-MM-dd');
-    if (!dailyTasks[dateKey]) {
-      const tasksForDate = await fetchTasksByDate(date);
-      setDailyTasks(prev => ({
-        ...prev,
-        [dateKey]: tasksForDate
-      }));
-    }
   };
 
   const getTasksCountForDate = (date) => {
@@ -107,15 +129,20 @@ const Calendar = () => {
     return isToday(date);
   };
 
+  const isPastDate = (date) => {
+    const today = startOfDay(new Date());
+    return startOfDay(date) < today;
+  };
+
   return (
-    <div className="w-full h-full bg-gradient-to-br from-[#4A3C3C] via-[#3B2F2F] to-[#2A1F1F] p-6 relative overflow-hidden">
+    <div className="w-full h-full bg-gradient-to-br from-[#4A3C3C] via-[#3B2F2F] to-[#2A1F1F] p-6 relative overflow-hidden flex flex-col">
       {/* Background decoration */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-20 left-20 w-64 h-64 bg-[#FFD97D] rounded-full blur-3xl"></div>
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-[#8B7355] rounded-full blur-3xl"></div>
       </div>
       
-      <div className="max-w-6xl mx-auto h-full relative z-10">
+      <div className="w-full h-full relative z-10 flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between mb-8 animate-in slide-in-from-top-4 duration-700">
           <div className="flex items-center space-x-4">
@@ -153,9 +180,9 @@ const Calendar = () => {
         </div>
 
         {/* Calendar Grid */}
-        <div className="bg-[#3B2F2F] rounded-3xl p-8 shadow-2xl border border-[#8B7355] backdrop-blur-sm animate-in slide-in-from-bottom-4 duration-700">
+        <div className="bg-[#3B2F2F] rounded-3xl p-6 shadow-2xl border border-[#8B7355] backdrop-blur-sm animate-in slide-in-from-bottom-4 duration-700 flex-1 flex flex-col">
           {/* Day Headers */}
-          <div className="grid grid-cols-7 gap-4 mb-8">
+          <div className="grid grid-cols-7 gap-3 mb-4 flex-shrink-0">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
               <div key={day} className="text-center">
                 <div className="text-sm font-semibold text-[#C4A484] uppercase tracking-wider bg-gradient-to-r from-[#C4A484] to-[#8B7355] bg-clip-text text-transparent">
@@ -166,21 +193,27 @@ const Calendar = () => {
           </div>
 
           {/* Calendar Days */}
-          <div className="grid grid-cols-7 gap-4">
+          <div className="grid grid-cols-7 gap-3 flex-1">
             {days.map((day) => {
               const taskCount = getTasksCountForDate(day);
               const hasTasks = taskCount > 0;
+              const isPast = isPastDate(day);
+              const isSelectable = isCurrentMonth(day) && !isPast;
               
               return (
                 <button
                   key={day.toString()}
-                  onClick={() => handleDateClick(day)}
-                  disabled={!isCurrentMonth(day)}
+                  onClick={() => isSelectable && handleDateClick(day)}
+                  disabled={!isSelectable}
                   className={`
-                    relative aspect-square rounded-2xl transition-all duration-300 group
-                    ${isCurrentMonth(day) 
+                    relative rounded-2xl transition-all duration-300 group
+                    ${isSelectable
                       ? 'hover:bg-[#4A3C3C] hover:scale-105 cursor-pointer' 
                       : 'opacity-30 cursor-not-allowed'
+                    }
+                    ${isPast && isCurrentMonth(day)
+                      ? 'opacity-20 bg-gray-600'
+                      : ''
                     }
                     ${isSelected(day) 
                       ? 'bg-[#FFD97D] text-[#3B2F2F] shadow-lg scale-105' 
@@ -197,13 +230,14 @@ const Calendar = () => {
                     <span className={`
                       text-lg font-semibold transition-all duration-200
                       ${isSelected(day) ? 'text-[#3B2F2F]' : 'text-[#FDF6EC]'}
+                      ${isPast && isCurrentMonth(day) ? 'text-gray-400' : ''}
                     `}>
                       {formatDayNumber(day)}
                     </span>
                   </div>
 
                   {/* Task Indicator */}
-                  {hasTasks && (
+                  {hasTasks && !isPast && (
                     <div className={`
                       absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold
                       ${isSelected(day) 
@@ -217,12 +251,12 @@ const Calendar = () => {
                   )}
 
                   {/* Hover Effect */}
-                  {isCurrentMonth(day) && (
+                  {isSelectable && (
                     <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#FFD97D] to-[#FFB84D] opacity-0 group-hover:opacity-10 transition-all duration-300" />
                   )}
                   
                   {/* Subtle border for current month days */}
-                  {isCurrentMonth(day) && !isSelected(day) && (
+                  {isCurrentMonth(day) && !isSelected(day) && !isPast && (
                     <div className="absolute inset-0 rounded-2xl border border-[#8B7355] border-opacity-20" />
                   )}
                 </button>

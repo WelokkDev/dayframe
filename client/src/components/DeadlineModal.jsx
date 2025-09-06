@@ -55,7 +55,7 @@ const DeadlineModal = ({ isOpen, onClose, task, onComplete, onFail }) => {
       >
         <div className="border-b border-[#8B7355] pb-4">
           <h2 className="text-2xl font-semibold text-[#FDF6EC]">
-            Task Deadline Missed
+            Sorry, for the inconvenience.
           </h2>
           <p className="text-[#C4A484] mt-2">
             The deadline for "{task.title}" has passed. What happened?
@@ -86,7 +86,7 @@ const DeadlineModal = ({ isOpen, onClose, task, onComplete, onFail }) => {
               disabled={isSubmitting}
               className="w-full"
             >
-              {isSubmitting ? "Marking Complete..." : "✅ I Completed This Task"}
+              {isSubmitting ? "Marking Complete..." : "I Completed This Task"}
             </Button>
 
             <div className="text-center text-[#C4A484] text-sm">
@@ -110,7 +110,7 @@ const DeadlineModal = ({ isOpen, onClose, task, onComplete, onFail }) => {
                 disabled={isSubmitting || !failureReason.trim()}
                 className="w-full"
               >
-                {isSubmitting ? "Marking Failed..." : "❌ I Failed This Task"}
+                {isSubmitting ? "Marking Failed..." : "I Failed This Task"}
               </Button>
             </div>
           </div>

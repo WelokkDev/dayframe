@@ -247,6 +247,81 @@ export const getUpcomingScheduledDates = (recurrence, count = 5, fromDate = new 
 
     attempts++;
   }
+  
 
   return dates;
+};
+
+/**
+ * Generate task instances for a specific task within a date range
+ * @param {Object} task - Task object with recurrence rules
+ * @param {Date} startDate - Start date for generation
+ * @param {Date} endDate - End date for generation
+ * @param {Array} existingInstances - Array of existing task instances to avoid duplicates
+ * @returns {Array} Array of generated instance objects
+ */
+export const generateTaskInstancesForRange = (task, startDate, endDate, existingInstances = []) => {
+  if (!task.recurrence || !task.recurrence.frequency) {
+    return [];
+  }
+
+  // Get upcoming dates for this task
+  const upcomingDates = getUpcomingScheduledDates(task.recurrence, 100, startDate);
+  
+  // Filter dates within the range
+  const datesInRange = upcomingDates.filter(date => date >= startDate && date <= endDate);
+  
+  // Convert to instance objects and avoid duplicates
+  const instances = datesInRange
+    .filter(date => {
+      // Check if there's already an existing instance for this task on this date
+      return !existingInstances.some(existing => {
+        const existingDate = new Date(existing.scheduled_at);
+        return existing.task_id === task.id && 
+               existingDate.toDateString() === date.toDateString();
+      });
+    })
+    .map(date => ({
+      id: `generated-${task.id}-${date.getTime()}`,
+      task_id: task.id,
+      title: task.title,
+      importance: task.importance,
+      scheduled_at: date.toISOString(),
+      is_generated: true,
+      recurrence: task.recurrence,
+      category_id: task.category_id,
+      original_instruction: task.original_instruction
+    }));
+
+  return instances;
+};
+
+/**
+ * Generate all task instances for multiple tasks within a date range
+ * @param {Array} tasks - Array of task objects
+ * @param {Date} startDate - Start date for generation
+ * @param {Date} endDate - End date for generation
+ * @param {Array} existingInstances - Array of existing task instances to avoid duplicates
+ * @returns {Array} Array of all generated instance objects
+ */
+export const generateAllTaskInstancesForRange = (tasks, startDate, endDate, existingInstances = []) => {
+  const allInstances = [];
+  
+  console.log('=== generateAllTaskInstancesForRange ===');
+  console.log('Tasks received:', tasks.length);
+  console.log('Task IDs:', tasks.map(t => t.id));
+  console.log('Task titles:', tasks.map(t => t.title));
+  
+  tasks.forEach(task => {
+    if (task.recurrence && task.recurrence.frequency) {
+      console.log(`Processing task: ${task.title} (ID: ${task.id})`);
+      const taskInstances = generateTaskInstancesForRange(task, startDate, endDate, existingInstances);
+      allInstances.push(...taskInstances);
+    }
+  });
+  
+  console.log('Total instances generated:', allInstances.length);
+  console.log('=== End generateAllTaskInstancesForRange ===\n');
+  
+  return allInstances;
 };
