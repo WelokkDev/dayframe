@@ -8,6 +8,7 @@ export default function Button ({ children, onClick, type="button", variant, siz
         primary: "bg-[#FFD97D] text-[#3B2F2F] hover:bg-[#FFD061] active:bg-[#FFC94D] focus:ring-[#FFD97D] shadow-sm hover:shadow-md",
         secondary: "px-2 py-1 bg-[#4A3C3C] text-[#FDF6EC] hover:bg-[#5A4C4C] focus:ring-[#8B7355] border border-[#8B7355]",
         danger: "bg-[#8B4A4A] text-[#FDF6EC] hover:bg-[#9B5A5A] active:bg-[#7B3A3A] focus:ring-[#8B4A4A] shadow-sm hover:shadow-md",
+        cancel_red: "bg-[#EF4444] text-white hover:bg-[#DC2626] active:bg-[#B91C1C] focus:ring-[#EF4444] shadow-sm hover:shadow-md",
         ghost: "text-[#C4A484] hover:text-[#FFD97D] hover:bg-[#3B2F2F] focus:ring-[#8B7355]"
     }
 

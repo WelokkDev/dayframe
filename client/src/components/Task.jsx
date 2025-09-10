@@ -43,7 +43,7 @@ const Task = ({ task }) => {
     }
 
     return (
-        <div className="group bg-[#4A3C3C] border border-[#8B7355] rounded-xl p-4 hover:shadow-md transition-all duration-200">
+        <div className="group bg-[#2A1F1F] rounded-xl p-4 hover:shadow-lg hover:bg-[#302525] transition-all duration-200 border border-[#3A2F2F]">
             <div className="flex items-center space-x-4">
                 {/* Checkbox */}
                 <button
@@ -52,7 +52,7 @@ const Task = ({ task }) => {
                     className={`flex-shrink-0 w-6 h-6 rounded-lg border-2 transition-all duration-200 ${
                         isCompleting 
                             ? 'border-[#FFD97D] bg-[#FFD97D]' 
-                            : 'border-[#8B7355] hover:border-[#FFD97D] hover:bg-[#3B2F2F]'
+                            : 'border-[#6B5B5B] hover:border-[#FFD97D] hover:bg-[#3A2F2F]'
                     }`}
                 >
                     {isCompleting && (
@@ -65,7 +65,7 @@ const Task = ({ task }) => {
                 {/* Task Content */}
                 <div className="flex-1 min-w-0">
                                             <div className="flex items-center space-x-3 mb-1">
-                            <div className="flex items-center space-x-1 text-[#C4A484]">
+                            <div className="flex items-center space-x-1 text-[#9CA3AF]">
                                 <ClockIcon className="w-4 h-4" />
                                 <span className="text-sm font-medium">{formattedDateTime}</span>
                             </div>
@@ -82,7 +82,7 @@ const Task = ({ task }) => {
                     </h3>
                     
                     {task.original_instruction && (
-                        <p className="text-sm text-[#C4A484] mt-1 line-clamp-2">
+                        <p className="text-sm text-[#9CA3AF] mt-1 line-clamp-2">
                             {task.original_instruction}
                         </p>
                     )}
@@ -93,7 +93,7 @@ const Task = ({ task }) => {
                     {task.repeat_is_true && (
                         <button
                             onClick={() => setIsTaskInfoOpen(true)}
-                            className="p-2 text-[#8B7355] hover:text-[#FFD97D] hover:bg-[#3B2F2F] rounded-lg transition-colors duration-200"
+                            className="p-2 text-[#6B5B5B] hover:text-[#FFD97D] hover:bg-[#3A2F2F] rounded-lg transition-colors duration-200"
                             title="View task information"
                         >
                             <InfoCircledIcon className="w-5 h-5" />
@@ -102,7 +102,7 @@ const Task = ({ task }) => {
 
                     <button
                         onClick={() => setIsFailureModalOpen(true)}
-                        className="p-2 text-[#8B7355] hover:text-[#D5A8A8] hover:bg-[#4A2D2D] rounded-lg transition-colors duration-200"
+                        className="p-2 text-[#6B5B5B] hover:text-[#EF4444] hover:bg-[#3A2F2F] rounded-lg transition-colors duration-200"
                         title="Mark as failed"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

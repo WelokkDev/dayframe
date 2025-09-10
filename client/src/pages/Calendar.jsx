@@ -7,9 +7,12 @@ import Modal from "../components/Modal";
 import { generateAllTaskInstancesForRange } from "../utils/recurrenceUtils";
 
 const Calendar = () => {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // State management for calendar functionality
+  const [currentMonth, setCurrentMonth] = useState(new Date()); // Currently displayed month
+  const [selectedDate, setSelectedDate] = useState(new Date()); // Date selected for viewing tasks
+  const [isModalOpen, setIsModalOpen] = useState(false); // Controls daily tasks modal visibility
+  
+  // Task context for data management
   const { tasks, fetchTasks, fetchTasksByDate } = useTasks();
 
   // Fetch tasks when component mounts
@@ -17,8 +20,13 @@ const Calendar = () => {
     fetchTasks();
   }, [fetchTasks]);
 
-
-  // Memoized function to get all tasks (actual + generated) for the current month
+  /**
+   * Memoized function to get all tasks (actual + generated) for the current month
+   * Combines existing task instances with generated instances for recurring tasks
+   * Only includes current and future dates, filtering out past tasks
+   * 
+   * @returns {Array} Array of all tasks for the current month
+   */
   const getAllTasksForMonth = useMemo(() => {
     if (!tasks || tasks.length === 0) return [];
     
@@ -26,7 +34,7 @@ const Calendar = () => {
     const monthEnd = endOfMonth(currentMonth);
     const today = startOfDay(new Date());
     
-    // Only get tasks for current and future dates, not past dates
+    // Filter actual tasks for current month and future dates only
     const actualTasks = tasks.filter(task => {
       if (!task.scheduled_at) return false;
       const taskDate = new Date(task.scheduled_at);
@@ -59,7 +67,12 @@ const Calendar = () => {
     return [...actualTasks, ...generatedInstances];
   }, [tasks, currentMonth]);
 
-  // Generate calendar days
+  /**
+   * Generate calendar days for the current month view
+   * Includes days from previous/next month to fill the calendar grid
+   * 
+   * @returns {Array} Array of Date objects for the calendar grid
+   */
   const days = useMemo(() => {
     return eachDayOfInterval({
       start: startOfWeek(startOfMonth(currentMonth)),
@@ -67,7 +80,13 @@ const Calendar = () => {
     });
   }, [currentMonth]);
 
-  // Get tasks for a specific date (simple and efficient)
+  /**
+   * Get tasks for a specific date
+   * Filters tasks from the current month's task list by matching date
+   * 
+   * @param {Date} date - The date to get tasks for
+   * @returns {Array} Array of tasks scheduled for the given date
+   */
   const getTasksForDate = (date) => {
     const targetDate = startOfDay(date);
     
@@ -77,7 +96,14 @@ const Calendar = () => {
     });
   };
 
-  // Sort tasks by time (specific times first, then no-time tasks)
+  /**
+   * Sort tasks by time preference
+   * Tasks with specific times are shown first, then tasks without specific times
+   * Within each group, tasks are sorted by time
+   * 
+   * @param {Array} tasks - Array of tasks to sort
+   * @returns {Array} Sorted array of tasks
+   */
   const sortTasksByTime = (tasks) => {
     return tasks.sort((a, b) => {
       const aHasSpecificTime = a.recurrence?.preferred_time && a.recurrence.preferred_time !== "11:59";
@@ -101,32 +127,8 @@ const Calendar = () => {
     setIsModalOpen(true);
   };
 
-  const getTasksCountForDate = (date) => {
-    return getTasksForDate(date).length;
-  };
-
   const getSelectedDateTasks = () => {
     return sortTasksByTime(getTasksForDate(selectedDate));
-  };
-
-  const formatMonthYear = (date) => {
-    return format(date, "MMMM yyyy");
-  };
-
-  const formatDayNumber = (date) => {
-    return format(date, "d");
-  };
-
-  const isCurrentMonth = (date) => {
-    return isSameMonth(date, currentMonth);
-  };
-
-  const isSelected = (date) => {
-    return isSameDay(date, selectedDate);
-  };
-
-  const isCurrentDay = (date) => {
-    return isToday(date);
   };
 
   const isPastDate = (date) => {
@@ -143,8 +145,9 @@ const Calendar = () => {
       </div>
       
       <div className="w-full h-full relative z-10 flex flex-col">
-        {/* Header */}
+        {/* Page Header with Title and Month Navigation */}
         <div className="flex items-center justify-between mb-8 animate-in slide-in-from-top-4 duration-700">
+          {/* Title Section */}
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-gradient-to-br from-[#FFD97D] to-[#FFB84D] rounded-2xl flex items-center justify-center shadow-lg">
               <CalendarIcon className="w-6 h-6 text-[#3B2F2F]" />
@@ -157,7 +160,7 @@ const Calendar = () => {
             </div>
           </div>
           
-          {/* Month Navigation */}
+          {/* Month Navigation Controls */}
           <div className="flex items-center space-x-4">
             <button
               onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
@@ -166,8 +169,9 @@ const Calendar = () => {
               <ChevronLeftIcon className="w-5 h-5 text-[#C4A484] group-hover:text-[#FFD97D] transition-colors duration-200" />
             </button>
             
+            {/* Current Month/Year Display */}
             <h2 className="text-2xl font-bold text-[#FDF6EC] min-w-[200px] text-center bg-gradient-to-r from-[#FDF6EC] to-[#C4A484] bg-clip-text text-transparent">
-              {formatMonthYear(currentMonth)}
+              {format(currentMonth, "MMMM yyyy")}
             </h2>
             
             <button
@@ -179,9 +183,9 @@ const Calendar = () => {
           </div>
         </div>
 
-        {/* Calendar Grid */}
+        {/* Calendar Grid Container */}
         <div className="bg-[#3B2F2F] rounded-3xl p-6 shadow-2xl border border-[#8B7355] backdrop-blur-sm animate-in slide-in-from-bottom-4 duration-700 flex-1 flex flex-col">
-          {/* Day Headers */}
+          {/* Day Headers (Sun, Mon, Tue, etc.) */}
           <div className="grid grid-cols-7 gap-3 mb-4 flex-shrink-0">
             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
               <div key={day} className="text-center">
@@ -192,13 +196,13 @@ const Calendar = () => {
             ))}
           </div>
 
-          {/* Calendar Days */}
+          {/* Calendar Days Grid */}
           <div className="grid grid-cols-7 gap-3 flex-1">
             {days.map((day) => {
-              const taskCount = getTasksCountForDate(day);
+              const taskCount = getTasksForDate(day).length;
               const hasTasks = taskCount > 0;
               const isPast = isPastDate(day);
-              const isSelectable = isCurrentMonth(day) && !isPast;
+              const isSelectable = isSameMonth(day, currentMonth) && !isPast;
               
               return (
                 <button
@@ -211,36 +215,36 @@ const Calendar = () => {
                       ? 'hover:bg-[#4A3C3C] hover:scale-105 cursor-pointer' 
                       : 'opacity-30 cursor-not-allowed'
                     }
-                    ${isPast && isCurrentMonth(day)
+                    ${isPast && isSameMonth(day, currentMonth)
                       ? 'opacity-20 bg-gray-600'
                       : ''
                     }
-                    ${isSelected(day) 
+                    ${isSameDay(day, selectedDate) 
                       ? 'bg-[#FFD97D] text-[#3B2F2F] shadow-lg scale-105' 
                       : 'bg-transparent text-[#FDF6EC]'
                     }
-                    ${isCurrentDay(day) && !isSelected(day)
+                    ${isToday(day) && !isSameDay(day, selectedDate)
                       ? 'ring-2 ring-[#FFD97D] ring-opacity-50'
                       : ''
                     }
                   `}
                 >
-                  {/* Day Number */}
+                  {/* Day Number Display */}
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className={`
                       text-lg font-semibold transition-all duration-200
-                      ${isSelected(day) ? 'text-[#3B2F2F]' : 'text-[#FDF6EC]'}
-                      ${isPast && isCurrentMonth(day) ? 'text-gray-400' : ''}
+                      ${isSameDay(day, selectedDate) ? 'text-[#3B2F2F]' : 'text-[#FDF6EC]'}
+                      ${isPast && isSameMonth(day, currentMonth) ? 'text-gray-400' : ''}
                     `}>
-                      {formatDayNumber(day)}
+                      {format(day, "d")}
                     </span>
                   </div>
 
-                  {/* Task Indicator */}
+                  {/* Task Count Indicator */}
                   {hasTasks && !isPast && (
                     <div className={`
                       absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold
-                      ${isSelected(day) 
+                      ${isSameDay(day, selectedDate) 
                         ? 'bg-[#3B2F2F] text-[#FFD97D]' 
                         : 'bg-[#FFD97D] text-[#3B2F2F]'
                       }
@@ -256,7 +260,7 @@ const Calendar = () => {
                   )}
                   
                   {/* Subtle border for current month days */}
-                  {isCurrentMonth(day) && !isSelected(day) && !isPast && (
+                  {isSameMonth(day, currentMonth) && !isSameDay(day, selectedDate) && !isPast && (
                     <div className="absolute inset-0 rounded-2xl border border-[#8B7355] border-opacity-20" />
                   )}
                 </button>
@@ -266,7 +270,7 @@ const Calendar = () => {
         </div>
       </div>
 
-      {/* Daily Tasks Modal */}
+      {/* Daily Tasks Modal - Shows tasks for selected date */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <div className="w-full max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-6">
@@ -278,6 +282,7 @@ const Calendar = () => {
                 Tasks for {format(selectedDate, "EEEE, MMMM d, yyyy")}
               </h2>
             </div>
+            {/* Close Button */}
             <button
               onClick={() => setIsModalOpen(false)}
               className="p-3 text-[#8B7355] hover:text-[#FFD97D] hover:bg-[#3B2F2F] rounded-xl transition-all duration-200"
@@ -288,6 +293,7 @@ const Calendar = () => {
             </button>
           </div>
           
+          {/* Task List for Selected Date */}
           <TaskList
             title=""
             tasks={getSelectedDateTasks()}

@@ -3,13 +3,19 @@ import TaskList from "../components/TaskList";
 import { fetchWithAuth } from "../utils/fetchWithAuth";
 
 const Completed = () => {
+    // State management for completed tasks and loading status
     const [completedTasks, setCompletedTasks] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    /**
+     * Fetch completed tasks from the server
+     * Called when component mounts to load user's completed tasks
+     */
     useEffect(() => {
         const fetchCompletedTasks = async () => {
             try {
                 setLoading(true);
+                // Fetch tasks with 'completed' status from server
                 const res = await fetchWithAuth("http://localhost:3000/tasks?status=completed");
                 if (res.ok) {
                     const data = await res.json();
@@ -27,6 +33,7 @@ const Completed = () => {
         fetchCompletedTasks();
     }, []);
 
+    // Loading state - show loading message while fetching data
     if (loading) {
         return (
             <div className="h-full w-full p-12 flex justify-center">
@@ -40,6 +47,7 @@ const Completed = () => {
     return (
         <div className="h-full w-full p-12 flex justify-center">
             <div className="w-full max-w-4xl">
+                {/* Completed Tasks List */}
                 <TaskList
                     title="Completed Tasks"
                     tasks={completedTasks}

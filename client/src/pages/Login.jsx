@@ -5,28 +5,35 @@ import { useNavigate } from "react-router";
 import { useAuth } from "../context/AuthProvider.jsx";
 
 export default function Login() {
-
+  // State management for form inputs
   const [input, setInput] = useState({
     email: '',
     password: ''
   });
 
+  // Navigation and authentication hooks
   const navigate = useNavigate();
   const  { login } = useAuth();
 
+  /**
+   * Handles the login form submission
+   * Validates input fields and sends authentication request to server
+   * 
+   * @param {Event} e - Form submission event
+   */
   const handleLogin = async (e) => {
     e.preventDefault();
+    
+    // Validate that both email and password are provided
     if (input.email !== "" && input.password !== "") {
-      console.log(input.email);
-      console.log(input.password);
-      console.log("nice!!");
       try {
+        // Send login request to server with credentials
         const res = await fetch("http://localhost:3000/login", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include",
+          credentials: "include", // Include cookies for session management
           body: JSON.stringify(input),
         });
 
@@ -58,9 +65,12 @@ export default function Login() {
 
   return (
     <div className="w-full h-[100dvh] flex justify-center items-center">
+      {/* Login Form Container */}
       <div className=" w-1/4 p-12 bg-[var(--foreground)] rounded my-auto mx-auto align-middle text-[var(--text-dark)]">
         <h1 className="text-2xl font-bold ">Log in</h1>
-        <p className="mt-2 text-[var(--text-dark)]">Here’s what’s on your agenda today...</p>
+        <p className="mt-2 text-[var(--text-dark)]">Here's what's on your agenda today...</p>
+        
+        {/* Login Form */}
         <form onSubmit={handleLogin}>
           <TextField name="email" onChange={handleInput} className="mt-4 w-full">Email</TextField>
           <TextField name="password" onChange={handleInput} className="mt-4 w-full">Password</TextField>
@@ -75,7 +85,6 @@ export default function Login() {
           </a>
         </p>
       </div>
-
     </div>
   );
 }

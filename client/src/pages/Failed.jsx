@@ -3,13 +3,19 @@ import TaskList from "../components/TaskList";
 import { fetchWithAuth } from "../utils/fetchWithAuth";
 
 export default function Failed() {
+  // State management for failed tasks and loading status
   const [failedTasks, setFailedTasks] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  /**
+   * Fetch failed tasks from the server
+   * Called when component mounts to load user's failed tasks
+   */
   useEffect(() => {
     const fetchFailedTasks = async () => {
       try {
         setLoading(true);
+        // Fetch tasks with 'failed' status from server
         const res = await fetchWithAuth("http://localhost:3000/tasks?status=failed");
         if (res.ok) {
           const data = await res.json();
@@ -27,6 +33,7 @@ export default function Failed() {
     fetchFailedTasks();
   }, []);
 
+  // Loading state - show loading message while fetching data
   if (loading) {
     return (
       <div className="h-full w-full p-12 flex justify-center">
@@ -40,6 +47,7 @@ export default function Failed() {
   return (
     <div className="h-full w-full p-12 flex justify-center">
       <div className="w-full max-w-4xl">
+        {/* Failed Tasks List */}
         <TaskList
           title="Failed Tasks"
           tasks={failedTasks}

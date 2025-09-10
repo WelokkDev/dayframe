@@ -1,97 +1,195 @@
 # Dayframe
 
-A full-stack productivity app for managing tasks. Built with React, Express, and PostgreSQL for a responsive and efficient experience.
+**Intelligent Task Management with AI-Powered Natural Language Processing**
 
-## Features:
-- **Authentication**: Secure registration and login with JWT and Bcrypt.
-- **Task Management**: Create and manage custom tasks
-- **Task Categories**: Organize tasks into custom categories for better focus and structure
-- **Recurring Tasks**: Set repeat schedules with optional end datasets
-- **PostgreSQL Backend**: Efficient relational data storage for tasks, categories, and user data.
+Transform your productivity with Dayframe — a sophisticated full-stack application that combines intelligent task parsing, advanced scheduling, and seamless user experience. Simply describe what you need to do in natural language, and watch as AI transforms your thoughts into structured, actionable tasks with smart scheduling and recurrence patterns.
 
-## Why I Made It:
-I made this primarily as an exercise in creating a full-stack application from the ground up, covering everything from database design to UI components. Though I've previously worked on several websites, I'd either be developing their frontend, or taking a focus on updating the backend. With this project, i set out to challenge myself, owning the entire stack, and understanding how each layer connects. This project allowed me to experiment with RESTful API design, along with authentication flows and how that relates to security, within a real-world context.
+![Dayframe Dashboard](./assets/dashboard-screenshot.png)
 
-## How It's Made:
-**Frontend:** React.js, Tailwind,   
-**Backend:** Node.js, Express.js, PostgreSQL, JWT, bcrypt   
+## ✨ Key Features
 
-I designed the frontend with a component-first mindset, breaking the UI into reusable pieces such as custom buttons, modals, select fields, and even calendars. Every component I tried to design for clarity and reusability, to avoid rewriting the same logic. I used React Hooks (useState, useEffect, useContext) to make local and global state predictable and efficient. 
+### 🤖 **AI-Powered Task Generation**
+- **Natural Language Processing**: Describe tasks in plain English — "Buy groceries tomorrow" or "Go to gym 4 times a week"
+- **Intelligent Parsing**: OpenAI integration automatically extracts deadlines, recurrence patterns, and task priorities
+- **Smart Scheduling**: AI understands complex time expressions and converts them to precise scheduling rules
+- **Interactive Confirmation**: Review and approve AI-generated tasks before they're added to your workflow
 
-On the backend, I structured the API using RESTful principles, separating routes, controllers, and database queries for maintainability. JWT-based authentication ensures secure user sessions, while bcrypt is used to hash and store passwords safely. I designed the PostgreSQL schema to handle tasks, logic to make them recurring, along with categories to hold these tasks. 
+### 📅 **Advanced Recurrence Engine**
+- **Flexible Patterns**: Daily, weekly, monthly schedules with custom intervals
+- **Complex Rules**: "Every 3 weeks", "4 times per week", "First Monday of each month"
+- **Time-Specific Tasks**: Set preferred times, time ranges, and end conditions
+- **Smart Instance Generation**: Automatic creation of future task instances based on recurrence rules
 
-## Lessons Learned
-- **Authentication is much tricker than it looks.** I initially set out, with a **very** weak understanding of how authentication works, and setting up token handling (access vs refresh) took me a much longer amount of time than I initially estimated.
-- **Frontend State can get messy fast.** Early on, I let too many components handle their own state, which made debugging a nightmare. Refactoring to a global useContext approach was a lightbulb moment for cleaner and simpler data flow.
-- **Feature creep is real.**. Wanting to personalize this task manager for my own use, I initially set out with a long list of features, baffled that most popular todo apps didn’t have them. I quickly learned why those features are often left out, for they add not only code complexity, but also complicate the user experience. As much as I wanted to pack in every idea, I had to prioritize the features most central to the solution.
+### 🎨 **Custom Calendar Interface**
+- **Interactive Calendar View**: Visual task management with drag-and-drop functionality
+- **Category Organization**: Organize tasks into custom categories for better focus
+- **Task Status Tracking**: Monitor completed, failed, and pending tasks
+- **Responsive Design**: Seamless experience across desktop and mobile devices
 
-## Setup Instructions
-PostgreSQL must be running locally (or remotely)
+### 🔐 **Enterprise-Grade Security**
+- **JWT Authentication**: Secure token-based authentication with refresh token rotation
+- **Password Hashing**: Bcrypt encryption for secure password storage
+- **Protected Routes**: Middleware-protected API endpoints
+- **Session Management**: Robust user session handling
 
-### 1. Clone the Repository
+## 🛠 Tech Stack
 
-```bash
-  git clone https://github.com/yourusername/dayframe.git
-  cd dayframe
+### Frontend
+- **React 19** - Modern component-based UI with hooks and context
+- **Tailwind CSS** - Utility-first styling with custom design system
+- **React Router** - Client-side routing and navigation
+- **Date-fns** - Advanced date manipulation and formatting
+- **Framer Motion** - Smooth animations and transitions
+
+### Backend
+- **Node.js & Express.js** - RESTful API architecture
+- **PostgreSQL** - Relational database with optimized queries
+- **OpenAI API** - GPT integration for natural language processing
+- **JWT & Bcrypt** - Secure authentication and password hashing
+- **CORS & Cookie Parser** - Cross-origin resource sharing and session management
+
+### Development Tools
+- **Vite** - Fast build tool and development server
+- **ESLint** - Code quality and consistency
+- **Nodemon** - Automatic server restarts during development
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (v18 or higher)
+- PostgreSQL (v12 or higher)
+- OpenAI API key
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/dayframe.git
+   cd dayframe
+   ```
+
+2. **Install dependencies**
+   ```bash
+   # Frontend dependencies
+   cd client && npm install
+   
+   # Backend dependencies
+   cd ../server && npm install
+   ```
+
+3. **Database setup**
+   ```bash
+   # Create database
+   createdb dayframe
+   
+   # Run SQL scripts
+   psql -U postgres -d dayframe -f server/sql/create_users.sql
+   psql -U postgres -d dayframe -f server/sql/create_categories.sql
+   psql -U postgres -d dayframe -f server/sql/create_tasks.sql
+   psql -U postgres -d dayframe -f server/sql/create_recurrence.sql
+   psql -U postgres -d dayframe -f server/sql/create_task_instances.sql
+   psql -U postgres -d dayframe -f server/sql/create_counter_instances.sql
+   psql -U postgres -d dayframe -f server/sql/create_ai_conversations.sql
+   ```
+
+4. **Environment configuration**
+   Create `server/.env`:
+   ```env
+   DB_USER=your_postgres_user
+   DB_PASSWORD=your_postgres_password
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_NAME=dayframe
+   JWT_SECRET=your_jwt_secret
+   JWT_REFRESH_SECRET=your_jwt_refresh_secret
+   OPENAI_API_KEY=your_openai_api_key
+   ```
+
+5. **Start development servers**
+   ```bash
+   # Terminal 1 - Backend
+   cd server && npm run dev
+   
+   # Terminal 2 - Frontend
+   cd client && npm run dev
+   ```
+
+## 🎯 Usage Examples
+
+### Natural Language Task Creation
 ```
-### 2. Install dependencies  
-Install dependencies for both the frontend (client) and backend (server):
+"Buy groceries tomorrow at 2pm"
+→ Creates task: "Buy groceries" due tomorrow at 2:00 PM
 
-```bash
-  # In the client directory
-  npm install
+"Go to gym every Monday, Wednesday, and Friday"
+→ Creates recurring task with weekly pattern on specific days
 
-  # In the server directory
-  npm install
+"Submit quarterly report by the 15th of next month"
+→ Creates task with calculated due date and importance flag
+
+"Call mom 3 times a week"
+→ Creates task with 3 occurrences per week pattern
 ```
 
-### 3. Set up the Database  
-#### 3.1 Create the Database
-Make sure PostgreSQL is running, then create the database:
+### Advanced Recurrence Patterns
+- **Daily**: "Every day", "Every 2 days"
+- **Weekly**: "Every Monday", "Every 3 weeks on Tuesday"
+- **Monthly**: "Every 15th", "First Monday of each month"
+- **Custom**: "4 times per week", "Every other weekday"
 
-```bash
-  createdb dayframe
-```
-If `createdb` isn’t available, use `psql`
-```bash
-  psql -U postgres -c "CREATE DATABASE dayframe;"
-```
-#### 3.2 Create the Tables
-Run the SQL scripts located in the `server/db/` directory:
-```bash
-  psql -U postgres -d dayframe -f server/db/create_users.sql
-  psql -U postgres -d dayframe -f server/db/create_categories.sql
-  psql -U postgres -d dayframe -f server/db/create_tasks.sql
-```
+## 🏗 Architecture Highlights
 
-### 4. Configure environment variables  
-Create a `.env` file in the `server/` directory and add the required variables:
+### Database Design
+- **Normalized Schema**: Optimized relational structure for scalability
+- **Recurrence Rules**: Flexible pattern storage supporting complex scheduling
+- **Task Instances**: Efficient generation and management of recurring task occurrences
+- **AI Conversations**: Persistent storage of user interactions for context
 
-```bash
-  DB_USER=your_postgres_user
-  DB_PASSWORD=_your_postgres_password
-  DB_HOST=localhost
-  PORT=5432
-  DB_NAME=your_db_name
-  JWT_SECRET=your_jwt_secret
-  JWT_REFRESH_SECRET=your_jwt_refresh_secret
-```
-### 5. Start the Development Servers
-Run backend and frontend in **two seperate terminals**
-#### Backend
-```bash
-  cd server
-  npm run dev
-```
+### API Design
+- **RESTful Endpoints**: Clean, predictable API structure
+- **Middleware Architecture**: Authentication, validation, and error handling
+- **Error Handling**: Comprehensive error responses with proper HTTP status codes
+- **Rate Limiting**: Protection against API abuse
 
-#### Frontend
-```bash
-  cd client
-  npm run dev
-```
+### Frontend Architecture
+- **Component-Based**: Reusable, maintainable UI components
+- **Context Management**: Global state management with React Context
+- **Custom Hooks**: Encapsulated business logic and API interactions
+- **Responsive Design**: Mobile-first approach with Tailwind CSS
 
-## What Is Left?
-- Add scrollable and virtualized task lists for large datasets
-- Refine UI and responsive layouts for a more polished experience
-- Implement drag-and-drop task reordering
-- Integrate notifications/reminders for upcoming tasks
+## 🔮 Future Enhancements
+
+- **Real-time Notifications**: Push notifications for upcoming tasks
+- **Team Collaboration**: Multi-user workspaces and task sharing
+- **Advanced Analytics**: Productivity insights and task completion metrics
+- **Mobile App**: Native iOS and Android applications
+- **Integration APIs**: Connect with calendar apps and productivity tools
+
+## 📸 Screenshots
+
+![AI Task Generation](./assets/ai-prompt-screenshot.png)
+*Natural language task creation with AI-powered parsing*
+
+![Calendar View](./assets/calendar-screenshot.png)
+*Interactive calendar with drag-and-drop task management*
+
+![Task Management](./assets/tasks-screenshot.png)
+*Organized task lists with category filtering*
+
+## 🤝 Contributing
+
+This project demonstrates full-stack development capabilities including:
+- **Frontend Development**: React, modern JavaScript, responsive design
+- **Backend Development**: Node.js, Express, RESTful API design
+- **Database Design**: PostgreSQL, query optimization, data modeling
+- **AI Integration**: OpenAI API, natural language processing
+- **Security**: Authentication, authorization, data protection
+- **DevOps**: Environment configuration, deployment considerations
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+**Built with ❤️ to showcase modern full-stack development and AI integration capabilities.**

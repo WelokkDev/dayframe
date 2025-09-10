@@ -7,7 +7,7 @@ const FailedTask = ({ task }) => {
     const scheduledDateTime = formatTaskDateTime(task.scheduled_at, task.recurrence?.preferred_time);
 
     return (
-        <div className="group bg-[#3B2F2F] border border-[#EF4444] rounded-xl p-4 transition-all duration-200">
+        <div className="group bg-[#2A1F1F] rounded-xl p-4 transition-all duration-200 border border-[#3A2F2F] shadow-sm">
             <div className="flex items-center space-x-4">
                 {/* Failed Icon */}
                 <div className="flex-shrink-0 w-6 h-6 rounded-lg bg-[#EF4444] border-2 border-[#EF4444] flex items-center justify-center">
@@ -19,7 +19,7 @@ const FailedTask = ({ task }) => {
                 {/* Task Content */}
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-3 mb-1">
-                        <div className="flex items-center space-x-1 text-[#9CA3AF]">
+                        <div className="flex items-center space-x-1 text-[#6B5B5B]">
                             <ClockIcon className="w-4 h-4" />
                             <span className="text-sm font-medium">Due: {scheduledDateTime}</span>
                         </div>

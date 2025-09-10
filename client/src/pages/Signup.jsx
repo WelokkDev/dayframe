@@ -4,19 +4,29 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 
 export default function Signup() {
-  
+  // State management for form inputs
   const [input, setInput] = useState({
     display_name: '',
     email: '',
     password: ''
   });
 
+  // Navigation hook for programmatic routing
   const navigate = useNavigate();
 
+  /**
+   * Handles the signup form submission
+   * Validates all input fields and sends registration request to server
+   * 
+   * @param {Event} e - Form submission event
+   */
   const handleSignup = async (e) => {
     e.preventDefault();
+    
+    // Validate that all required fields are provided
     if (input.display_name != "" && input.email != "" && input.password != "") {
       try {
+        // Send signup request to server
         const res = await fetch('http://localhost:3000/signup', {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -26,9 +36,11 @@ export default function Signup() {
         const data = await res.json();
         if (res.ok) {
           console.log("Signed up:", data.user)
+          // Redirect to login page after successful registration
           navigate("/login");
         } 
         else {
+          // Display error message from server
           alert(data.error || "Signup failed.")
         }
 
@@ -52,15 +64,20 @@ export default function Signup() {
   
   return (
     <div className="w-full h-[100dvh] flex justify-center items-center">
+      {/* Signup Form Container */}
       <div className=" w-1/4 p-12 bg-[var(--foreground)] rounded my-auto mx-auto align-middle text-[var(--text-dark)]">
         <h1 className="text-2xl font-bold ">Sign up</h1>
-        <p className="mt-2 text-[var(--text-dark)] mb-2 ">Here’s what’s on your agenda today...</p>
+        <p className="mt-2 text-[var(--text-dark)] mb-2 ">Here's what's on your agenda today...</p>
+        
+        {/* Signup Form */}
         <form onSubmit={handleSignup}>
           <TextField name="display_name" onChange={handleInput} className="mt-4 w-full">Name</TextField>
           <TextField type="email" name="email" onChange={handleInput} className="mt-4 w-full">Email</TextField>
           <TextField type="password" name="password" onChange={handleInput} className="mt-4 w-full">Password</TextField>
           <Button variant="primary" size="md" type="submit" className="w-full py-3 mt-4 justify-center items-center text-center">Create account</Button>
         </form>
+        
+        {/* Login Link */}
         <p className="flex justify-center mt-2">Already have an account? 
           <a 
             href="/login" 
@@ -70,7 +87,6 @@ export default function Signup() {
           </a>
         </p>
       </div>
-
     </div>
   );
 }
